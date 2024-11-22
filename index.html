@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games</title>
+    <link rel="stylesheet" href="css/index.css">
+</head>
+
+<body>
+    <h1>My unfinished projects</h1>
+    <div id="projects-container"></div>
+
+    <script>
+        const excludedFiles = ["index.html", "resources", "css", "moving-button.html"];
+        const projectIcons = {
+            "heart-fights": "heart.png",
+            "2D-zombies": "zombie.png",
+            "rogue-light": "cross_holy.png",
+            "shrub-dubs": "bush.png",
+            "meteors.html": "meteor.png",
+            "button.html": "button.png"
+        };
+
+        fetch('.')
+            .then(response => response.text())
+            .then(data => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(data, 'text/html');
+                const files = Array.from(doc.querySelectorAll('a')).map(a => a.href.split('/').pop());
+
+                files.forEach(file => {
+                    if (!excludedFiles.includes(file) && file !== "." && file !== "..") {
+                        let displayName = file.replace(/-/g, ' ').replace(/\.[^/.]+$/, "").replace(/\b\w/g, l => l.toUpperCase());
+                        let container = document.getElementById('projects-container');
+
+                        if (projectIcons[file]) {
+                            container.innerHTML += `<div class='heart_fights_container'><img src='resources/${projectIcons[file]}' alt='*' class='heart'><a href='${file}' class='heart_fights'>${displayName}</a><img src='resources/${projectIcons[file]}' alt='*' class='heart'></div>`;
+                        } else {
+                            container.innerHTML += `<a href='${file}'>${displayName}</a>`;
+                        }
+                    }
+                });
+            });
+    </script>
+</body>
+
+</html>
