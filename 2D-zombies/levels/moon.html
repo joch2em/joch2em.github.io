@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moon</title>
     <link rel="stylesheet" href="../resources/css/level.css">
 </head>
+
 <body>
     <div class="game-container">
         <h1 color="white">Moon</h1>
@@ -15,20 +17,20 @@
         <button id="spawnEnemyButton">Spawn Enemy</button>
     </div>
     <script>
-        <?php
+        <? php
         $settingsJson = file_get_contents('../settings.json');
         $settings = json_decode($settingsJson, true);
         ?>
-        const settings = <?php echo json_encode($settings); ?>;
+        const settings = <? php echo json_encode($settings); ?>;
         let volume;
         let controls;
         let difficulty;
-        try{
+        try {
             volume = settings.volume;
             controls = settings.controls;
             difficulty = settings.difficulty;
         }
-        catch(e){
+        catch (e) {
             volume = 80;
             controls = {
                 move_left: 'a',
@@ -46,4 +48,5 @@
     <script src="../resources/js/moon/movement.js"></script>
     <script src="../resources/js/moon/player.js"></script>
 </body>
+
 </html>
