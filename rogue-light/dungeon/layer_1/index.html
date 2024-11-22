@@ -130,14 +130,6 @@
                 }
             });
 
-            // Create a graphics object for the overlay
-            this.overlayGraphics = this.add.graphics({
-                fillStyle: {
-                    color: 0xffffff,
-                    alpha: 1
-                }
-            });
-
             // Frame counter for optimizing drawing frequency
             this.frameCounter = 0;
         }
@@ -191,7 +183,6 @@
 
                 // Clear the previous graphics
                 this.graphics.clear();
-                this.overlayGraphics.clear();
 
                 // Draw the viewing cone
                 this.graphics.fillStyle(0xffffff, 0.2);
@@ -202,17 +193,6 @@
                 });
                 this.graphics.closePath();
                 this.graphics.fillPath();
-
-                // Draw the overlay
-                this.overlayGraphics.fillStyle(0xffffff, 1);
-                this.overlayGraphics.fillRect(0, 0, levelWidth * tileSize, levelHeight * tileSize);
-                this.overlayGraphics.beginPath();
-                this.overlayGraphics.moveTo(this.player.x, this.player.y);
-                intersections.forEach(intersection => {
-                    this.overlayGraphics.lineTo(intersection.x, intersection.y);
-                });
-                this.overlayGraphics.closePath();
-                this.overlayGraphics.fillPath();
             }
 
             // Increment the frame counter
