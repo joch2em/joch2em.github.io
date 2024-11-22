@@ -19,6 +19,25 @@ let startTime = Date.now();
 
 const plantSelectionBar = document.getElementById('plant-selection-bar');
 
+try {
+    waves;
+    console.log('Using predetermened waves');
+}
+catch (error) {
+    const waveCount = 40; // Number of waves to generate
+    const minTime = 10000; // Minimum time for the first wave
+    const maxTime = 180000; // Maximum time for the last wave
+    const minSpeed = 0.8; // Minimum speed of enemies
+    const maxSpeed = 1.2; // Maximum speed of enemies
+
+    waves = Array.from({ length: waveCount }, (_, i) => ({
+        time: Math.floor(minTime + (maxTime - minTime) * (i / waveCount)), // Distribute timings evenly
+        row: Math.round(Math.random() * (rows - 1)), // Random row with equal probability
+        speed: (Math.random() * (maxSpeed - minSpeed) + minSpeed).toFixed(2) // Random speed between minSpeed and maxSpeed
+    }));
+    console.log('Generated waves', waves);
+}
+
 class Projectile {
     constructor(x, y, speed, target, damage) {
         this.x = x;
@@ -253,16 +272,16 @@ function drawGrid() {
 
             const isOddCell = col & 1 == 1;
 
-             // Alternate cell colors
-            if(row & 1 == 1){
-                if(!isOddCell){
-                    ctx.fillStyle = '#37a03d'; 
+            // Alternate cell colors
+            if (row & 1 == 1) {
+                if (!isOddCell) {
+                    ctx.fillStyle = '#37a03d';
                     ctx.fillRect(x, y, cellWidth, cellHeight);
                 }
             }
-            else{
-                if(isOddCell){
-                    ctx.fillStyle = '#37a03d'; 
+            else {
+                if (isOddCell) {
+                    ctx.fillStyle = '#37a03d';
                     ctx.fillRect(x, y, cellWidth, cellHeight);
                 }
             }
@@ -428,7 +447,7 @@ function handlePlantActions() {
                         blockZombies(cell);
                         break;
                     case 'Cherry Bomb':
-                        if(cell.plant.shootInterval){
+                        if (cell.plant.shootInterval) {
                             continue;
                         }
                         cell.plant.shootInterval = true;
@@ -462,7 +481,7 @@ function handlePlantActions() {
     }
 }
 
-function handleExplosion(cell, range){
+function handleExplosion(cell, range) {
     if (isPaused) { return; }
     const enemiesInRange = enemies.filter(enemy => {
         const distance = Math.sqrt(Math.pow(enemy.x - (cell.col * cellWidth + cellWidth / 2), 2) + Math.pow(enemy.y - (cell.row * cellHeight + cellHeight / 2), 2));
@@ -567,7 +586,7 @@ function checkEnemyHealth() {
     });
 }
 
-function gameLoop(){
+function gameLoop() {
     handleWaves();
     drawGrid();
     handlePlantActions();
@@ -603,7 +622,7 @@ document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && !isPaused) {
         stopGameLoop();
     }
-    else if(event.key === 'Escape' && isPaused){
+    else if (event.key === 'Escape' && isPaused) {
         startGameLoop();
     }
 });
