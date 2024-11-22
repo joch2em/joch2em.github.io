@@ -15,38 +15,38 @@ var somethingSelected = false;
 
 let scaleUp = true;
 
-bones.addEventListener("click", function() {
-    if(!somethingSelected){
+bones.addEventListener("click", function () {
+    if (!somethingSelected) {
         selected.play();
         menuMusic.pause();
         somethingSelected = true;
         var flashing = setInterval(() => {
             bones.style.color = bones.style.color == "blue" ? "white" : "blue";
-        }, 300); 
+        }, 300);
         setTimeout(() => {
             clearInterval(flashing);
-            bonesFight = window.open("fights/boneyMan.php", "", "width=1000,height=1000");
+            bonesFight = window.open("fights/boneyMan.html", "", "width=1000,height=1000");
         }, 3000);
     }
 });
 
-fishy.addEventListener("click", function() {
-    if(!somethingSelected){
+fishy.addEventListener("click", function () {
+    if (!somethingSelected) {
         selected.play();
         menuMusic.pause();
         somethingSelected = true;
         var flashing = setInterval(() => {
             fishy.style.color = fishy.style.color == "green" ? "white" : "green";
-        }, 300); 
+        }, 300);
         setTimeout(() => {
             clearInterval(flashing);
-            fishyFight = window.open("fights/fishyWoman.php", "", "width=1000,height=1000");
+            fishyFight = window.open("fights/fishyWoman.html", "", "width=1000,height=1000");
         }, 3000);
     }
 });
 
-heartContainer.addEventListener("click", function() {
-    if(!somethingSelected){
+heartContainer.addEventListener("click", function () {
+    if (!somethingSelected) {
         somethingSelected = true;
         makePixelsFall();
         menuMusic.pause();
@@ -54,7 +54,7 @@ heartContainer.addEventListener("click", function() {
             selected.play();
         }, 5000)
         setTimeout(() => {
-            secretHeart = window.open("secrets/heart.php", "", "width=1000,height=1000");;
+            secretHeart = window.open("secrets/heart.html", "", "width=1000,height=1000");;
         }, 6000);
     }
 });
@@ -68,9 +68,9 @@ var breathing = setInterval(() => {
         heartContainer.style.transform = 'scale(0.8)';
     }
     scaleUp = !scaleUp;
-  }, 2000); // Interval of 1 second
+}, 2000); // Interval of 1 second
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     heartContainer.style.transform = 'scale(0.8)';
 });
 

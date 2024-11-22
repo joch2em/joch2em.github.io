@@ -15,18 +15,18 @@
     <script>
         // Configuration variables
         const tileSize = 40;
-        const levelWidth = 90; // Increased level width
-        const levelHeight = 40; // Increased level height
-        const playerColor = 0x00ff00; // Player color
-        const exitRoomColor = 0x006400; // Exit room color
-        const exitTileColor = 0x0000ff; // Exit tile color
-        const playerSpeed = 260; // Player speed
-        const normalRoomColor = 0xbdb356; // Normal room color
+        const levelWidth = 90; // In tiles
+        const levelHeight = 40;
+        const playerColor = 0x00ff00;
+        const exitRoomColor = 0x006400;
+        const exitTileColor = 0x0000ff;
+        const playerSpeed = 260;
+        const normalRoomColor = 0xbdb356;
 
         let config = {
             type: Phaser.AUTO,
-            width: 800, // Viewport width
-            height: 600, // Viewport height
+            width: 800,
+            height: 600,
             physics: {
                 default: 'arcade',
                 arcade: {
@@ -52,38 +52,32 @@
         const game = new Phaser.Game(config);
 
         function preload() {
-            this.load.image('wall', '../../resources/img/stone_brick_texture.png'); // Preload the wall texture
+            this.load.image('wall', '../../resources/img/stone_brick_texture.png');
         }
 
         function create() {
-            // Create walls as simple rectangles
             this.walls = this.physics.add.staticGroup();
-            const seed = Math.random().toString(36).substr(2, 9); // Generate a random seed
+            this.exposedWalls = this.physics.add.staticGroup();
+            const seed = Math.random().toString(36).substr(2, 9);
             console.log('Seed:', seed);
-            const playerPosition = generateLevel(this, seed); // Pass the random seed
+            const playerPosition = generateLevel(this, seed);
 
-            // Create player as a simple rectangle at the determined position
             this.player = this.add.rectangle(playerPosition.x, playerPosition.y, tileSize, tileSize, playerColor);
             this.physics.add.existing(this.player);
             this.player.body.setCollideWorldBounds(true);
 
-            // Enable cursor keys for player movement
             this.cursors = this.input.keyboard.createCursorKeys();
 
-            // Add collider after player and walls are created
             this.physics.add.collider(this.player, this.walls);
 
-            // Set up the camera to follow the player
             this.cameras.main.setBounds(0, 0, levelWidth * tileSize, levelHeight * tileSize);
             this.cameras.main.startFollow(this.player);
 
-            // Adjust world bounds to match the dungeon size
             this.physics.world.setBounds(0, 0, levelWidth * tileSize, levelHeight * tileSize);
 
-            // Initialize the raycaster
             this.raycaster = this.raycasterPlugin.createRaycaster({
-                debug: false, // Disable debug mode for better performance
-                mapSegmentCount: 32 // Reduce the number of segments for better performance
+                debug: true,
+                mapSegmentCount: 128
             });
             this.ray1 = this.raycaster.createRay({
                 origin: {
@@ -91,7 +85,7 @@
                     y: this.player.y
                 },
                 angle: 0,
-                collisionRange: 200 // Limit the range to reduce calculations
+                collisionRange: 500
             });
             this.ray2 = this.raycaster.createRay({
                 origin: {
@@ -99,22 +93,27 @@
                     y: this.player.y
                 },
                 angle: 0,
-                collisionRange: 200 // Limit the range to reduce calculations
+                collisionRange: 500
+            });
+            this.ray3 = this.raycaster.createRay({
+                origin: {
+                    x: this.player.x,
+                    y: this.player.y
+                },
+                angle: 0,
+                collisionRange: 500
+            });
+            this.ray4 = this.raycaster.createRay({
+                origin: {
+                    x: this.player.x,
+                    y: this.player.y
+                },
+                angle: 0,
+                collisionRange: 500
             });
 
-            // Set the raycaster to map the walls
-            this.raycaster.mapGameObjects(this.walls.getChildren());
+            this.raycaster.mapGameObjects(this.exposedWalls.getChildren());
 
-            // Create a black overlay
-            this.overlay = this.add.graphics({
-                fillStyle: {
-                    color: 0x000000,
-                    alpha: 1
-                }
-            });
-            this.overlay.fillRect(0, 0, levelWidth * tileSize, levelHeight * tileSize);
-
-            // Create a graphics object for the viewing cone
             this.graphics = this.add.graphics({
                 fillStyle: {
                     color: 0xffffff,
@@ -122,7 +121,6 @@
                 }
             });
 
-            // Frame counter for optimizing drawing frequency
             this.frameCounter = 0;
         }
 
@@ -141,35 +139,38 @@
                 this.player.body.setVelocityY(playerSpeed);
             }
 
-            // Update the rays' origin to the player's position
             this.ray1.setOrigin(this.player.x, this.player.y);
             this.ray2.setOrigin(this.player.x, this.player.y);
+            this.ray3.setOrigin(this.player.x, this.player.y);
+            this.ray4.setOrigin(this.player.x, this.player.y);
 
-            // Only update the viewing cone every 5 frames
-            if (this.frameCounter % 5 === 0) {
+            if (this.frameCounter % 10 === 0) {
                 const intersections = [];
-                for (let angle = -15; angle < 360; angle += 15) { // Adjust the step to balance performance and accuracy
+                for (let angle = 0; angle < 360; angle += 15) {
                     this.ray1.setAngle(Phaser.Math.DegToRad(angle));
-                    this.ray2.setAngle(Phaser.Math.DegToRad(angle + 5)); // Offset the second ray by 10 degrees
+                    this.ray2.setAngle(Phaser.Math.DegToRad(angle + 5));
+                    this.ray3.setAngle(Phaser.Math.DegToRad(angle + 10));
+                    this.ray4.setAngle(Phaser.Math.DegToRad(angle + 15));
                     const intersection1 = this.ray1.cast();
                     const intersection2 = this.ray2.cast();
+                    const intersection3 = this.ray3.cast();
+                    const intersection4 = this.ray4.cast();
                     if (intersection1) {
                         intersections.push(intersection1);
                     }
                     if (intersection2) {
                         intersections.push(intersection2);
                     }
+                    if (intersection3) {
+                        intersections.push(intersection3);
+                    }
+                    if (intersection4) {
+                        intersections.push(intersection4);
+                    }
                 }
 
-                // Clear the previous graphics
                 this.graphics.clear();
-                this.overlay.clear();
 
-                // Draw the black overlay
-                this.overlay.fillStyle(0x000000, 1);
-                this.overlay.fillRect(0, 0, levelWidth * tileSize, levelHeight * tileSize);
-
-                // Draw the viewing cone
                 this.graphics.fillStyle(0xffffff, 0.2);
                 this.graphics.beginPath();
                 this.graphics.moveTo(this.player.x, this.player.y);
@@ -178,27 +179,8 @@
                 });
                 this.graphics.closePath();
                 this.graphics.fillPath();
-
-                // Create a hole in the overlay for the viewing cone
-                this.overlay.fillStyle(0x000000, 0);
-                this.overlay.beginPath();
-                this.overlay.moveTo(this.player.x, this.player.y);
-                intersections.forEach(intersection => {
-                    this.overlay.lineTo(intersection.x, intersection.y);
-                });
-                this.overlay.closePath();
-                this.overlay.fillPath();
-
-                // Redraw the player and walls within the viewing cone
-                this.player.setVisible(true);
-                this.walls.getChildren().forEach(wall => {
-                    const wallBounds = wall.getBounds();
-                    const isVisible = intersections.some(intersection => Phaser.Geom.Rectangle.ContainsPoint(wallBounds, intersection));
-                    wall.setVisible(isVisible);
-                });
             }
 
-            // Increment the frame counter
             this.frameCounter++;
         }
 
@@ -216,32 +198,28 @@
                     break;
                 case 'trap':
                     // Mockup for adding a trap
-                    scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, 0x8b0000).setOrigin(0); // Dark red color for trap
+                    scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, 0xcfcfcf).setOrigin(0); // grey color for trap
                     break;
             }
         }
 
         function generateLevel(scene, seed) {
-            // Initialize the seeded random number generator
             Math.seedrandom(seed);
 
-            // Create a 2D array to represent the level
             const level = Array.from({
                 length: levelHeight
             }, () => Array(levelWidth).fill(1));
 
-            // Function to create a room
             function createRoom(x, y, width, height, color = normalRoomColor) {
                 for (let i = y; i < y + height; i++) {
                     for (let j = x; j < x + width; j++) {
                         level[i][j] = 0;
                     }
                 }
-                // Draw the room with the specified color
                 scene.add.rectangle(x * tileSize, y * tileSize, width * tileSize, height * tileSize, color).setOrigin(0);
+                markExposedWalls(x, y, width, height);
             }
 
-            // Function to create a horizontal hallway
             function createHorizontalHallway(x1, x2, y, color = normalRoomColor) {
                 for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
                     if (level[y][x] !== 0) {
@@ -249,11 +227,11 @@
                         level[y + 1][x] = 0; // Make the hallway two tiles wide
                         scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, color).setOrigin(0);
                         scene.add.rectangle(x * tileSize, (y + 1) * tileSize, tileSize, tileSize, color).setOrigin(0);
+                        markExposedWalls(x, y, 1, 2);
                     }
                 }
             }
 
-            // Function to create a vertical hallway
             function createVerticalHallway(y1, y2, x, color = normalRoomColor) {
                 for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
                     if (level[y][x] !== 0) {
@@ -261,11 +239,21 @@
                         level[y][x + 1] = 0; // Make the hallway two tiles wide
                         scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, color).setOrigin(0);
                         scene.add.rectangle((x + 1) * tileSize, y * tileSize, tileSize, tileSize, color).setOrigin(0);
+                        markExposedWalls(x, y, 2, 1);
                     }
                 }
             }
 
-            // Create the starting room (4x4) at the top-left corner
+            function markExposedWalls(x, y, width, height) {
+                for (let i = y - 1; i <= y + height; i++) {
+                    for (let j = x - 1; j <= x + width; j++) {
+                        if (i >= 0 && i < levelHeight && j >= 0 && j < levelWidth && level[i][j] === 1) {
+                            level[i][j] = 2;
+                        }
+                    }
+                }
+            }
+
             const startX = 1;
             const startY = 1;
             createRoom(startX, startY, 4, 4);
@@ -277,13 +265,12 @@
                 width: 4,
                 height: 4
             }];
-            for (let i = 0; i < 10; i++) { // Increase the number of rooms
+            for (let i = 0; i < 10; i++) {
                 const roomWidth = Math.floor(Math.random() * 5) + 4;
                 const roomHeight = Math.floor(Math.random() * 5) + 4;
-                const roomX = Math.floor(Math.random() * (levelWidth - roomWidth - 1)) + 1; // Ensure room fits within borders
-                const roomY = Math.floor(Math.random() * (levelHeight - roomHeight - 1)) + 1; // Ensure room fits within borders
+                const roomX = Math.floor(Math.random() * (levelWidth - roomWidth - 1)) + 1;
+                const roomY = Math.floor(Math.random() * (levelHeight - roomHeight - 1)) + 1;
 
-                // Ensure the room does not overlap with existing rooms and has a 2-tile gap
                 let overlap = false;
                 for (const room of rooms) {
                     if (roomX < room.x + room.width + 2 && roomX + roomWidth + 2 > room.x &&
@@ -332,7 +319,6 @@
                 const currCenterX = currRoom.x + Math.floor(currRoom.width / 2);
                 const currCenterY = currRoom.y + Math.floor(currRoom.height / 2);
 
-                // Create L-shaped hallways
                 if (prevCenterX !== currCenterX && prevCenterY !== currCenterY) {
                     // if (Math.random() < 0.5) {
                     //     createHorizontalHallway(prevCenterX, currCenterX, prevCenterY, 0x797979);
@@ -348,13 +334,17 @@
                 }
             }
 
-            // Create walls based on the level array
             for (let y = 0; y < levelHeight; y++) {
                 for (let x = 0; x < levelWidth; x++) {
                     if (level[y][x] === 1) {
                         const wall = scene.add.image(x * tileSize, y * tileSize, 'wall').setOrigin(0);
                         scene.physics.add.existing(wall, true);
                         scene.walls.add(wall);
+                    } else if (level[y][x] === 2) {
+                        const wall = scene.add.image(x * tileSize, y * tileSize, 'wall').setOrigin(0);
+                        scene.physics.add.existing(wall, true);
+                        scene.walls.add(wall);
+                        scene.exposedWalls.add(wall);
                     }
                 }
             }
