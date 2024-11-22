@@ -1,0 +1,46 @@
+.menu-title{
+    font-size: 16px;
+    margin-bottom: 50px;
+    scale: 2;
+}
+
+.menu-text{
+    font-size: 12px;
+}
+
+.menu-links{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 50px;
+    scale: 2;
+    margin-right: 70px;
+}
+
+.menu-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+    overflow: hidden;
+}
+
+.pixel.red{
+    transition: background-color 0.2s ease; /* Used for animations */
+    transition: transform 1s ease, opacity 1s ease;
+}
+
+.fall {
+    transform: translateY(500px); /* Moves the pixel down */
+    opacity: 0; /* Fades the pixel out */
+}
+
+#bones:hover{
+    color: blue;
+}
+
+#fishy:hover{
+    color: green;
+}

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click the button</title>
+    <link rel="stylesheet" href="css/moving-button.css">
+    <link rel="stylesheet" href="css/dumbell-animation.css">
+</head>
+<body>
+    <h1 id="clicked-amount">Clicked 0 times</h1>
+    <div id="dev-container">
+        <label for="change-clicked-amount">
+            <p>clicked amount:</p>
+            <input type="number" id="change-clicked-amount">
+        </label>
+        <button id="saveDevOps">Save</button>
+    </div>
+
+    <div id="dumbell-container">
+        <div class="ball-left"></div>
+        <div class="arm left"></div>
+        <div class="dumbbell"></div>
+        <div class="arm right"></div>
+        <div class="ball-right"></div>
+    </div>
+
+    <div id="button-container" class="button-container">
+        <p id="speach"></p>
+        <div id="button-base" class="button-base">
+            <div id="the-first-button" class="the-button"></div>
+        </div>
+    </div>
+    <button onclick="deleteYes()" id="yes" class="yes" >hehehe</button>
+
+    <script>
+
+        // initialize the variables
+        var clickSound = new Audio('resources/sounds/click.mp3');
+
+        var devOpsEl = document.getElementById('dev-container');
+        var dev = false;
+        var saveDevOpsEl = document.getElementById('saveDevOps');
+        var changeClickedAmountEl = document.getElementById('change-clicked-amount');
+
+        var buttonEl = document.getElementById('the-first-button');
+        var buttonBaseEl = document.getElementById('button-base');
+        var buttonContainerEl = document.getElementById('button-container');
+        var clickedAmountEl = document.getElementById('clicked-amount');
+        var speachEl = document.getElementById('speach');
+        var pause = false;
+
+        const leftArm = document.querySelector(".arm.left");
+        const rightArm = document.querySelector(".arm.right");
+        const dumbell = document.querySelector(".dumbbell");
+        const ballRight = document.querySelector(".ball-right");
+        const ballLeft = document.querySelector(".ball-left");
+        const dumbellContainer = document.getElementById("dumbell-container");
+        const duration = 2000; // animation duration
+        const interval = 500; // interval between animations
+        let clickedAmount = 0;
+        if(dev){
+            devOpsEl.style.display = 'block';
+        }
+
+        function deleteYes(){
+            var yes = document.getElementById('yes');
+            yes.style.display = 'none';
+            yes.style.width = '0px';
+            yes.style.height = '0px';
+        }
+
+        // DevOps
+        saveDevOpsEl.addEventListener('click', function(){
+            clickedAmount = changeClickedAmountEl.value;
+            clickedAmountEl.innerText = 'Clicked ' + clickedAmount + ' times';
+        });
+
+        // the button
+        buttonEl.addEventListener('click', function() {
+            if(dev){
+                devOpsEl.style.display = 'block';
+            }
+            if(!pause){
+                clickSound.play();
+                console.log('Button clicked');
+                clickedAmount++;
+                clickedAmountEl.innerText = 'Clicked ' + clickedAmount + ' times';
+
+                // button events
+                switch(clickedAmount){
+
+                    case 1:
+                        pauseButton(500);
+                        buttonSpeach('Ow!', speachTimer = 500);
+                    break;
+                    
+                    case 10:
+                        buttonSpeach(text ='Hey, can you stop that?', speachTimer = 3000);
+                        pauseButton();
+                    break;
+
+                    case 30:
+                        buttonSpeach('I said stop!');
+                        pauseButton();
+                    break;
+
+                    case 50: 
+                        buttonSpeach('This is getting anoying...');
+                        pauseButton();
+                    break;
+
+                    case 100:
+                        buttonSpeach('You know what? I\'ll move...');
+                        pauseButton();
+                        moveButtonRandomly();
+                    break;
+
+                    case 101:
+                        pauseButton();
+                        moveButtonRandomly();
+                    break;
+
+                    case 102:
+                        pauseButton();
+                        moveButtonRandomly();
+                    break;
+
+                    case 103:
+                        pauseButton();
+                        moveButtonRandomly();
+                    break;
+
+                    case 104:
+                        pauseButton();
+                        moveButtonRandomly();
+                    break;
+
+                    case 105:
+                        pauseButton();
+                        moveButtonRandomly();
+                    break;
+
+                    case 106:
+                        pauseButton();
+                        moveButton('50vw', '50vh');
+                        setTimeout(function(){
+                            buttonSpeach('This is getting really tiring... I have not had this much excersize in a while', 'darkGrey', speachTimer = 5000);
+                        }, 500);
+                    break;
+
+                    case 150:
+                        pauseButton(6000);
+                        buttonSpeach("Actually, i think i might train, maybe i can get strong enough...?", speachTimer = 3000);
+                        setTimeout(function(){
+                            leftArm.classList.add("animate");
+                            rightArm.classList.add("animate");
+                            dumbell.classList.add("animate");
+                            ballLeft.classList.add("animate");
+                            ballRight.classList.add("animate");
+                            dumbellContainer.style.display = "block";
+
+
+                            setTimeout(() => {
+                                leftArm.classList.remove("animate");
+                                rightArm.classList.remove("animate");
+                                dumbell.classList.remove("animate");
+                                ballLeft.classList.remove("animate");
+                                ballRight.classList.remove("animate");
+                                dumbellContainer.style.display = "none";
+                                buttonSpeach("Ok, try and click me now >:)");
+                            }, duration);
+                        }, 3000);
+                        setTimeout(function(){
+                            buttonContainerEl.addEventListener('onmouseenter', moveButtonRandomly());
+                        }, 6000);
+                    break;
+
+                    case 151:
+                        pauseButton();
+                        buttonSpeach('Alright nevermind :(');
+                        buttonContainerEl.removeEventListener('onmouseenter', moveButtonRandomly());
+                    break;
+
+                    case 300:
+                        pauseButton();
+                        buttonSpeach('Alright time for another training montage!');
+                        setTimeout(function(){
+                            leftArm.classList.add("animate");
+                            rightArm.classList.add("animate");
+                            dumbell.classList.add("animate");
+                            ballLeft.classList.add("animate");
+                            ballRight.classList.add("animate");
+                            dumbellContainer.style.display = "block";
+
+
+                            setTimeout(() => {
+                                leftArm.classList.remove("animate");
+                                rightArm.classList.remove("animate");
+                                dumbell.classList.remove("animate");
+                                ballLeft.classList.remove("animate");
+                                ballRight.classList.remove("animate");
+                                dumbellContainer.style.display = "none";
+                                buttonSpeach("He he he, you can't catch me now!");
+                                setInterval(function(){
+                                    moveBy(Math.random() * 600 - 300, Math.random() * 600 - 300);
+                                }, 100)
+                            }, duration);
+                        }, 2000);
+                        setTimeout(function(){
+                            buttonContainerEl.addEventListener('onmouseenter', moveButtonRandomly());
+                        }, 5000);
+                    break;
+                }
+            }
+        });
+
+
+        // pauses the button for a set amount of time
+        function pauseButton(time){
+            var pauseTimer = 500;
+            buttonEl.classList.remove('the-button');
+            buttonEl.classList.add('the-button-inactive');
+            pause = true;
+
+            if(time){
+                pauseTimer = time;
+            }
+
+            setTimeout(function(){
+                pause = false; 
+                buttonEl.classList.remove('the-button-inactive');
+                buttonEl.classList.add('the-button');
+            }, pauseTimer);
+        }
+
+        // selects a random position on visable screen and calls movebutton
+        function moveButtonRandomly(){
+            var randomLeft = Math.random() * 90 + 'vw';
+            var randomTop = Math.random() * 90 + 'vh';
+            moveButton(randomLeft, randomTop);
+        }
+
+        // moves the button to the given position
+        function moveButton(left, top){
+            buttonContainerEl.style.left = left;
+            buttonContainerEl.style.top = top;
+        }
+
+        // alters the text for when the button speaks
+        function buttonSpeach(text, speachTimer, color, size){
+
+            if(!text){
+                console.log('No text given');
+                text = 'Something went wrong... :(';
+            }
+            if(!color){
+                console.log('No color given');
+                color = 'black';
+            }
+            if(!size){
+                console.log('No size given');
+                size = '1em';
+            }
+            if(!speachTimer){
+                console.log('No speachTimer given');
+                speachTimer = 2000;
+            }
+
+            speachEl.innerText = text;
+            speachEl.style.color = color;
+            speachEl.style.fontSize = size;
+
+            setTimeout(function(){
+                speachEl.innerText = '';
+            }, speachTimer);
+        }
+    </script>
+
+</body>
+</html>

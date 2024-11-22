@@ -1,0 +1,181 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: #000 ;
+    background-size: cover;
+    font-family: 'Courier New', monospace;
+    color: #fff;
+    overflow: hidden;
+}
+
+.menu {
+    text-align: center;
+}
+
+.menu h1 {
+    font-size: 60px;
+    margin-bottom: 50px;
+    text-shadow: 2px 2px 5px #ff0000;
+}
+
+.menu ul {
+    list-style: none;
+    padding: 0;
+}
+
+.menu li {
+    margin: 10px 0;
+}
+
+.menu a {
+    text-decoration: none;
+    font-size: 40px;
+    color: #fff;
+    padding: 10px 20px;
+    border: 3px solid #fff;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.menu a:hover {
+    background-color: #fff;
+    color: #000;
+}
+
+/* Additional styles for settings */
+.menu label {
+    font-size: 30px;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.menu input[type="range"],
+.menu select {
+    width: 30%;
+    padding: 10px;
+    font-size: 20px;
+    margin-bottom: 10px;
+    background: #333;
+    color: #fff;
+    border: 2px solid #fff;
+    border-radius: 5px;
+    outline: none;
+}
+
+.menu input[type="range"]::-webkit-slider-thumb {
+    background: #fff;
+    border: 2px solid #ff0000;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.menu input[type="range"]::-moz-range-thumb {
+    background: #fff;
+    border: 2px solid #ff0000;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.menu button,
+.menu a {
+    display: inline-block;
+    font-size: 30px;
+    color: #fff;
+    padding: 10px 20px;
+    border: 3px solid #fff;
+    background: none;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.menu button:hover,
+.menu a:hover {
+    background-color: #fff;
+    color: #000;
+}
+
+.controls-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 20px;
+    align-items: center;
+    margin-top: 20px;
+    margin-left: 20%;
+    margin-right: 20%;
+    height: 26vh;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.controls-container::-webkit-scrollbar {
+    display: none;  /* WebKit browsers */
+}
+
+.control-setting {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #222;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border: 2px solid #fff;
+}
+
+.control-setting span {
+    font-size: 20px;
+}
+
+.control-setting button {
+    font-size: 20px;
+    padding: 5px 10px;
+    border: 2px solid #fff;
+    background: #333;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.control-setting button:hover {
+    background-color: #fff;
+    color: #000;
+}
+
+.alert{
+    text-align: center;
+    display: block;
+    margin-bottom: 20px !important;
+}
+
+#alert{
+    opacity: 0;
+    display: inline;
+    transition: all 0.5s;
+    width: 20%;
+    padding: 5px 20px 5px 20px;
+    border-radius: 5px;
+}
+
+.selection {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    justify-items: center; /* Aligns grid items horizontally to the center */
+    align-items: center; /* Aligns grid items vertically to the center */
+    width: min-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.map-option{
+    width: 150px;
+    height: 200px;
+    background-color: #333;
+    display: inline-block;
+    margin: 10px;
+    padding: 10px;
+    border: 2px solid #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}

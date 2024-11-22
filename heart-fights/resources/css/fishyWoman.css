@@ -1,0 +1,82 @@
+.fishy-woman{
+    width: 100px;
+    height: 150px;
+    background-color: white;
+    position: absolute;
+    left: 50vw;
+    top: 30vw;
+    transform: translate(-50%, -100%);
+    transition: all 0.3s ease-in-out; 
+}
+
+.red {
+    background-color: green;
+}
+
+.shield{
+    display: none;
+    position: absolute;
+    background-color: white;
+}
+
+#shield-top{
+    left: 23px;
+    top: 15px;
+    height: 5px;
+    width: 55px;
+}
+#shield-left{
+    left: 15px;
+    top: 23px;
+    height: 55px;
+    width: 5px;
+}
+#shield-right{
+    right: 15px;
+    top: 23px;
+    height: 55px;
+    width: 5px;
+}
+#shield-bottom{
+    left: 23px;
+    bottom: 15px;
+    height: 5px;
+    width: 55px;
+}
+
+#spawnLeft{
+    width: 1px;
+    height: 1px;
+    position: absolute;
+    top: 70%;
+    right: 110%;
+}
+#spawnRight{
+    width: 1px;
+    height: 1px;
+    position: absolute;
+    top: 70%;
+    left: 110%;
+}
+#spawnTop{
+    width: 1px;
+    height: 1px;
+    position: absolute;
+    left: 48%;
+    bottom: 110%;
+}
+#spawnBottom{
+    width: 1px;
+    height: 1px;
+    position: absolute;
+    left: 50%;
+    top: 110%;
+}
+
+.spear{
+    position: absolute;
+    background-color: blue;
+    width: 10px;
+    height: 10px;
+    z-index: 10;
+}

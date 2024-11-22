@@ -1,0 +1,21 @@
+.heart-container{
+    scale: 5;
+    transition: transform 2s ease;
+}
+
+.heart-row {
+    display: flex;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+}
+
+.pixel {
+    width: 1px;
+    height: 1px;
+    background-color: transparent;
+}
+
+.red {
+    background-color: red;
+}

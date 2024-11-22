@@ -1,0 +1,121 @@
+html {
+    background-color: #f0f0f0;
+    font-family: 'Arial', sans-serif;
+    font-size: 16px;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+#plant-selection-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    background-color: #8B4513; /* Brown background to look like a plant box */
+    padding: 20px; /* Increase padding */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+    border-bottom: 5px solid #654321; /* Darker brown border to enhance the plant box look */
+}
+.plant-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100px;
+    height: 50px;
+    margin: 0 10px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    cursor: grab;
+    transition: transform 0.3s, box-shadow 0.3s;
+    user-select: none;
+    position: relative;
+}
+.plant-item:active {
+    cursor: grabbing; /* Change to grabbing cursor when active */
+}
+.plant-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+.recharge-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(128, 128, 128, 0.5); /* Transparent gray background */
+    display: none; /* Hidden by default */
+}
+
+.recharge-progress {
+    height: 100%;
+    width: 0;
+    background-color: rgba(128, 128, 128, 0.5); /* Transparent gray progress bar */
+    transition: width 0.1s linear; /* Smooth transition */
+}
+#canvas-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+    width: 100%;
+    position: relative; /* Ensure the falling circle is positioned relative to this container */
+}
+canvas {
+    background-color: #2E7D32; /* Green background for the canvas */
+    border: 1px solid #000; /* Optional: Add a border to the canvas */
+}
+.falling-circle {
+    width: 50px;
+    height: 50px;
+    background-color: yellow;
+    border-radius: 50%;
+    transition: top 2s ease-in-out; /* Smooth falling animation */
+    transition: background-color 0.5s ease-in-out; /* Smooth color change */
+}
+.sun-container{
+    position: absolute;
+    top: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    transition: top 2s ease-in-out; /* Smooth falling animation */
+}
+#sun-counter {
+    position: absolute;
+    z-index: 2;
+    top: 10px;
+    right: 10px;
+    background-color: #FFD700;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#pauseScreen {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px; /* Increase font size */
+    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
+    color: #fff; /* White text color */
+    padding: 20px; /* Add padding around the text */
+    border-radius: 10px; /* Optional: Add rounded corners */
+    text-align: center; /* Center the text */
+}

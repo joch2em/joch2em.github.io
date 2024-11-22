@@ -1,0 +1,12 @@
+{
+    "audio_volume": 80,
+    "controls": {
+        "move_up": "W",
+        "move_down": "S",
+        "move_left": "A",
+        "move_right": "D",
+        "shoot": "F",
+        "reload": "R"
+    },
+    "difficulty": "Normal"
+}

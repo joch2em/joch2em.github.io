@@ -1,0 +1,130 @@
+.battle-container{
+    position: absolute;
+    justify-content: center;
+    justify-items: center;
+    align-items: center;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 300px;
+    bottom: 50px;
+    display: grid;
+    grid-template-areas:
+        'arena arena arena arena'
+        'arena arena arena arena'
+        'info info info info'
+        'fight act item mercy';
+    column-gap: 20px;
+    row-gap: 5px;
+    background-color: rgba(0,0,0,0);
+    padding: 10px;
+}
+
+.battle-arena{
+    transition: all 0.5s ease;
+    position: relative;
+    grid-area: arena;
+    background-color: black;
+    border: 5px solid white;
+    height: 200px;
+    width: 674px;
+}
+
+.heart-container{
+    left: 45%;
+    top: 45%;
+    position: absolute;
+    scale: 1 !important;
+}
+
+.battle-option{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: black;
+    border: 3px solid orange;
+    height: 50px;
+    width: 150px;
+    color: orange;
+    user-select: none;
+    font-size: xx-large;
+}
+
+.hover{
+    border-color: gold;
+    color: gold;
+    cursor: pointer;
+}
+
+#hit-points{
+    position: absolute;
+    left: 280px;
+}
+
+#health{
+    z-index: 3;
+    position: absolute;
+    width: 200px;
+    height: 20px;
+    left: 350px;
+    background-color: gold;
+}
+
+#poison{
+    z-index: 2;
+    position: absolute;
+    width: 200px;
+    height: 20px;
+    left: 350px;
+    background-color: purple;
+}
+
+#under-health{
+    z-index: 1;
+    position: absolute;
+    width: 200px;
+    height: 20px;
+    left: 350px;
+    background-color: red;
+}
+
+.lvl{
+    position: absolute;
+    left: 67px;
+}
+
+.info{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    justify-items: normal;
+    flex-flow: row nowrap;
+    grid-area: info;
+    font-size: 24px;
+    height: 30px;
+}
+
+.fight-button{
+    grid-area: fight;
+}
+.act-button{
+    grid-area: act;
+}
+.item-button{
+    grid-area: item;
+}
+.mercy-button{
+    grid-area: mercy;
+}
+
+#menuText{
+    position: absolute;
+    left: 10%;
+    top: 20%;
+    color: white;
+    font-size: 20px;
+}
+
+body{
+    overflow: hidden;
+}

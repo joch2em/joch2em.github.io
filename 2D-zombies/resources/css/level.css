@@ -1,0 +1,19 @@
+body{
+    background-color: black;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+.game-container{
+    color: white;
+    position: absolute;
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+}
+#moon{
+    display: none;
+}

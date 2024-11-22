@@ -1,0 +1,73 @@
+#dumbell-container {
+    position: absolute;
+    display: none;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+}
+
+.arm {
+    position: absolute;
+    width: 20px;
+    height: 100px;
+    background-color: #8b5a2b;
+    bottom: 0;
+    z-index: 2;
+    transition: transform 0.5s ease-in-out;
+}
+
+.left {
+    left: 30px;
+    transform-origin: top;
+}
+
+.right {
+    right: 30px;
+    transform-origin: top;
+}
+
+.dumbbell {
+    position: absolute;
+    width: 200px;
+    height: 20px;
+    background-color: #666;
+    top: 100px;
+    left: 0;
+    border-radius: 10px;
+}
+
+.ball-left {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: #666;
+    border-radius: 50%;
+    top: 90px;
+    left: -30px;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
+.ball-right {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: #666;
+    border-radius: 50%;
+    top: 90px;
+    right: -30px;
+    transform: translateX(+50%);
+    z-index: 10;
+}
+
+@keyframes push {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-50px); }
+    100% { transform: translateY(0); }
+}
+
+.animate {
+    animation: push 0.5s ease-in-out infinite;
+}

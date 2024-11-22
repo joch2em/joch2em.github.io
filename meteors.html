@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/meteors.css">
+    <title>Meteors</title>
+</head>
+<body>
+    <div id="shopContainer">
+        <label for="shopItem" class="shopItem">
+            <p>Multi shot powerup</p>
+            <p>cost: $300</p>
+            <button onclick="purchaseItem(1)">buy</button>
+        </label>
+        <label for="shopItem" class="shopItem">
+            <p>Shield powerup</p>
+            <p>cost: $500</p>
+            <button onclick="purchaseItem(2)">buy</button>
+        </label>
+        <label for="shopItem" class="shopItem"></label>
+            <p>Amunition</p>
+            <p>cost: $300</p>
+            <button onclick="purchaseItem(3)">buy</button>
+        </label>
+    </div>
+
+    <div id="bulletCount"></div>
+
+    <button id="retry" onclick="restart()">retry</button>
+
+    <div id="score"></div>
+    <div id="astroBucks"></div>
+
+
+    <div id="dev">
+        <label for="coneAngle">
+            <p>cone angle:</p>
+            <input type="text" id="coneAngle">
+        </label>
+        <label for="starCount">
+            <p>star count:</p>
+            <input type="text" id="starCount">
+        </label>
+        <label for="meteorSpawnInterval">
+            <p>meteor spawn interval:</p>
+            <input type="text" id="meteorSpawnInterval">
+        </label>
+        <label for="multiShotChance">
+            <p>multi-shot chance:</p>
+            <input type="text" id="multiShotChance">
+        </label>
+        <label for="multiShotTimer">
+            <p>multi-shot timer:</p>
+            <input type="text" id="multiShotTimer">
+        </label>
+        <label for="multiShotMultiplier">
+            <p>multi-shot multiplier:</p>
+            <input type="text" id="multiShotMultiplier">
+        </label>
+        <label for="bulletCountStart">
+            <p>bullet count start:</p>
+            <input type="text" id="bulletCountStart">
+        </label>
+        <label for="goldenMeteorChance">
+            <p>golden meteor chance:</p>
+            <input type="text" id="goldenMeteorChance">
+        </label>
+        <label for="goldenMeteorReward">
+            <p>golden meteor reward:</p>
+            <input type="text" id="goldenMeteorReward">
+        </label>
+        <label for="astroBucksEl">
+            <p>astro bucks:</p>
+            <input type="text" id="astroBucksEl">
+        </label>
+        <button onclick="applyDevOptions()">apply</button>
+
+    </div>
+
+    <div id="player_container">
+        <div id="shield"></div>
+        <div id="player"></div>
+    </div>
+
+    
+
+    <script>
+        //sounds
+        var AmmoSound = new Audio('resources/sounds/ammoDrop.mp3');
+        var ShieldSound = new Audio('resources/sounds/shield.mp3');
+        var ShieldDownSound = new Audio('resources/sounds/shieldDown.mp3');
+        var ShootingSound = new Audio('resources/sounds/pew.mp3');
+        var ExplosionSound = new Audio('resources/sounds/explosion.mp3');
+
+        var pew = true;
+
+        var playerHit = false; 
+        var score = 0;
+        var astroBucks = 0;
+        document.getElementById("astroBucks").innerHTML = "astro bucks: $" + astroBucks;
+
+        var scoreInterval;
+        var backgroundStars;
+
+        if(new URLSearchParams(window.location.search).get("restarted") == "true"){
+            dev = new URLSearchParams(window.location.search).get("dev") || false;
+            console.log("dev: "+dev);
+
+            coneAngle = new URLSearchParams(window.location.search).get("coneAngle") || 30;
+            console.log("coneAngle: "+coneAngle);
+
+            starCount = new URLSearchParams(window.location.search).get("starCount") || 50;
+            console.log("starCount: "+starCount);
+
+            meteorSpawnInterval = new URLSearchParams(window.location.search).get("meteorSpawnInterval") || 800;
+            console.log("meteorSpawnInterval: "+meteorSpawnInterval);
+
+            multiShotChance = new URLSearchParams(window.location.search).get("multiShotChance") || 0.05;
+            console.log("multiShotChance: "+multiShotChance);
+
+            multiShotTimer = new URLSearchParams(window.location.search).get("multiShotTimer") || 8000;
+            console.log("multiShotTimer: "+multiShotTimer);
+
+            multiShotMultiplier = new URLSearchParams(window.location.search).get("multiShotMultiplier") || 3;
+            console.log("multiShotMultiplier: "+multiShotMultiplier);
+
+            bulletCountStart = new URLSearchParams(window.location.search).get("bulletCountStart") || 10;
+            console.log("bulletCountStart: "+bulletCountStart);
+
+            goldenMeteorChance = new URLSearchParams(window.location.search).get("goldenMeteorChance") || 0.05;
+            console.log("goldenMeteorChance: "+goldenMeteorChance);
+
+            goldenMeteorReward = new URLSearchParams(window.location.search).get("goldenMeteorReward") || 10;
+            console.log("goldenMeteorReward: "+goldenMeteorReward);
+        }
+        else{
+            var dev = false;
+            var coneAngle = 30;
+            var starCount = 50;
+            var meteorSpawnInterval = 800;
+            var multiShotChance = 0.05;
+            var multiShotTimer = 8000;
+            var multiShotMultiplier = 3;
+            var bulletCountStart = 25;
+            var goldenMeteorChance = 0.05;
+            var goldenMeteorReward = 10;
+        }
+
+        var restarted = false;
+        var retry = document.getElementById("retry");
+
+        var bulletCountEl = document.getElementById("bulletCount");
+        var scoreEl = document.getElementById("score");
+        shieldEl = document.getElementById("shield");
+
+        var meteorReward = 10;
+
+        var shieldActive = false;
+
+        var moneyDropChance = 0.1;
+        var moneyDropAmount = 30;
+        var isMultiShot = false;
+        var bulletCount = bulletCountStart;
+
+        // Difficulty increase
+        setTimeout(function(){
+            console.log("difficulty increased");
+            meteorSpawnInterval = 800;
+            multiShotChance = 0.08;
+            multiShotTimer = 10000;
+            goldenMeteorReward = 15;
+        }, 20000);
+        setTimeout(function(){
+            console.log("difficulty increased");
+            meteorSpawnInterval = 600;
+            multiShotChance = 0.07;
+            goldenMeteorChance = 0.05;
+        }, 40000);        
+        setTimeout(function(){
+            console.log("difficulty increased");
+            meteorSpawnInterval = 500;
+            multiShotChance = 0.05;
+            multiShotTimer = 10000;
+            goldenMeteorChance = 0.05;
+            goldenMeteorReward = 10;
+        }, 60000);       
+        setTimeout(function(){
+            console.log("difficulty increased");
+            meteorSpawnInterval = 300;
+            multiShotChance = 0.03;
+            multiShotTimer = 15000;
+        }, 80000);
+
+        makeStars();
+
+        document.getElementById("coneAngle").value = coneAngle;
+        document.getElementById("starCount").value = starCount;
+        document.getElementById("meteorSpawnInterval").value = meteorSpawnInterval;
+        document.getElementById("multiShotChance").value = multiShotChance;
+        document.getElementById("multiShotTimer").value = multiShotTimer;
+        document.getElementById("multiShotMultiplier").value = multiShotMultiplier;
+        document.getElementById("bulletCountStart").value = bulletCountStart;
+        document.getElementById("goldenMeteorChance").value = goldenMeteorChance;
+        document.getElementById("goldenMeteorReward").value = goldenMeteorReward;
+        document.getElementById("astroBucksEl").value = astroBucks;
+        
+        for (i = 0; i < bulletCount; i++) {
+            var bullet = document.createElement("div");
+            bullet.className = "bullets";
+            bulletCountEl.appendChild(bullet);
+        }
+
+        function applyDevOptions(){
+            coneAngle = parseFloat(document.getElementById("coneAngle").value);
+            starCount = parseFloat(document.getElementById("starCount").value);
+            meteorSpawnInterval = parseFloat(document.getElementById("meteorSpawnInterval").value);
+            multiShotChance = parseFloat(document.getElementById("multiShotChance").value);
+            multiShotTimer = parseFloat(document.getElementById("multiShotTimer").value);
+            multiShotMultiplier = parseFloat(document.getElementById("multiShotMultiplier").value);
+            bulletCountStart = parseFloat(document.getElementById("bulletCountStart").value);
+            goldenMeteorChance = parseFloat(document.getElementById("goldenMeteorChance").value);
+            goldenMeteorReward = parseFloat(document.getElementById("goldenMeteorReward").value);
+            astroBucks = parseFloat(document.getElementById("astroBucksEl").value);
+            document.getElementById("astroBucks").innerHTML = "astro bucks: $" + astroBucks;
+
+        }
+
+        
+        // Aiming
+        document.addEventListener("mousemove", function(event) {
+            if (playerHit) return;
+
+            var player = document.getElementById("player");
+            var playerRect = player.getBoundingClientRect();
+            var playerCenterX = playerRect.left + playerRect.width / 2;
+            var playerCenterY = playerRect.top + playerRect.height / 2;
+            var angle = Math.atan2(event.clientY - playerCenterY, event.clientX - playerCenterX) * 180 / Math.PI;
+            player.style.transform = "rotate(" + (angle + 90) + "deg)";
+        });
+
+        // Shooting
+        document.addEventListener("mousedown", function(event) {
+            if (playerHit) return;
+            if (bulletCount <= 0) return;
+            if(pew){
+                ShootingSound.play();
+            }
+
+            bulletCount--;
+
+            if (isMultiShot) {
+                // Multi-shot logic
+                var player = document.getElementById("player");
+                var playerRect = player.getBoundingClientRect();
+                var playerCenterX = playerRect.left + playerRect.width / 2;
+                var playerCenterY = playerRect.top + playerRect.height / 2;
+                var baseAngle = parseFloat(player.style.transform.replace("rotate(", "").replace("deg)", ""));
+        
+                // Calculate the angles for each bullet in the cone
+                var totalAngleSpread = coneAngle; // Total cone spread in degrees
+                var angleStep = totalAngleSpread / (multiShotMultiplier - 1); // Angle between each bullet
+                var startAngle = baseAngle - totalAngleSpread / 2; // Start at the leftmost angle of the cone
+        
+                for (var i = 0; i < multiShotMultiplier; i++) {
+                    (function(i) { // Closure to capture the values for each bullet
+                        var bullet = document.createElement("div");
+                        bullet.className = "bullet";
+                        document.body.appendChild(bullet);
+        
+                        // Set the angle for this bullet
+                        var currentAngle = startAngle + (i * angleStep);
+        
+                        // Bullet initial position and rotation
+                        bullet.style.transform = "rotate(" + currentAngle + "deg)";
+                        bullet.style.left = playerCenterX + "px"; 
+                        bullet.style.top = playerCenterY + "px";
+        
+                        var bulletX = playerCenterX;
+                        var bulletY = playerCenterY;
+                        var bulletSpeed = 1;
+        
+                        // Bullet movement
+                        var bulletInterval = setInterval(function() {
+                            bulletX += Math.cos((currentAngle - 90) * Math.PI / 180) * bulletSpeed;
+                            bulletY += Math.sin((currentAngle - 90) * Math.PI / 180) * bulletSpeed;
+                            bullet.style.left = bulletX + "px";
+                            bullet.style.top = bulletY + "px";
+        
+                            // Remove bullet if it goes off-screen
+                            if (bulletX < 0 || bulletX > window.innerWidth || bulletY < 0 || bulletY > window.innerHeight) {
+                                clearInterval(bulletInterval);
+                                bullet.remove();
+                            }
+                        }, 1);
+                    })(i); // Pass the iteration index to the closure
+                }
+            }
+            else{
+                var bullet = document.createElement("div");
+                bullet.className = "bullet";
+                document.body.appendChild(bullet);
+
+                var player = document.getElementById("player");
+                var playerRect = player.getBoundingClientRect();
+                var playerCenterX = playerRect.left + playerRect.width / 2;
+                var playerCenterY = playerRect.top + playerRect.height / 2;
+                var angle = parseFloat(player.style.transform.replace("rotate(", "").replace("deg)", ""));
+
+                var bulletSpeed = 1;
+                var bulletX = playerCenterX;
+                var bulletY = playerCenterY;
+                
+                bullet.style.transform = "rotate(" + angle + "deg)";
+                bullet.style.left = playerCenterX + "px"; 
+                bullet.style.top = playerCenterY + "px";
+
+                var bulletInterval = setInterval(function() {
+                    bulletX += Math.cos((angle - 90) * Math.PI / 180) * bulletSpeed;
+                    bulletY += Math.sin((angle - 90) * Math.PI / 180) * bulletSpeed;
+                    bullet.style.left = bulletX + "px";
+                    bullet.style.top = bulletY + "px";
+
+                    if (bulletX < 0 || bulletX > window.innerWidth || bulletY < 0 || bulletY > window.innerHeight) {
+                        clearInterval(bulletInterval);
+                        bullet.remove();
+                    }
+                }, 1);
+            }
+            bulletCountEl.removeChild(bulletCountEl.childNodes[0]);
+        });
+
+        // Meteors
+        var meteorInterval = setInterval(function() {
+            if (playerHit) return;
+
+            var meteorSize
+            var meteor;
+
+            var isGoldenMeteor = Math.random() < goldenMeteorChance;
+            var isThisMultiShot = Math.random() < multiShotChance;
+            var isMoneyDrop = Math.random() < moneyDropChance;
+
+            if (isGoldenMeteor) {
+                meteor = document.createElement("img");
+                meteor.src = "resources/golden_meteor.png"; // Golden meteor image
+                meteor.alt = "goldenMeteor";
+                meteor.classList.add("golden"); // Add a class to style it differently if needed
+                meteorSize = Math.random() * 40 + 30;
+            } 
+            else if(isThisMultiShot){
+                meteor = document.createElement("img");
+                meteor.src = "resources/multishot.png"; // Multishot
+                meteor.alt = "multiShot";
+                meteor.classList.add("multishot"); // Add a class to style it differently if needed
+                meteorSize = Math.random() * 40 + 30;
+            } 
+            else if(isMoneyDrop){
+                meteor = document.createElement("div");
+                meteor.innerHTML = "$";
+                meteor.classList.add("moneyDrop"); // Add a class to style it differently if needed
+                meteorSize = Math.random() * 20 + 10;
+            } 
+            else {
+                meteor = document.createElement("img");
+                meteor.src = "resources/meteor.png"; // Regular meteor image
+                meteorSize = Math.random() * 40 + 30;
+            }
+
+            meteor.classList.add("meteor");
+            meteor.draggable = false;
+
+            document.body.appendChild(meteor);
+
+            var meteorSpeed = Math.random() * 2 + 0.5; 
+
+            var spawnSide = Math.floor(Math.random() * 4); 
+            var meteorX, meteorY;
+
+            switch (spawnSide) {
+                case 0: // Top
+                    meteorX = Math.random() * window.innerWidth; 
+                    meteorY = -meteorSize;
+                    break;
+                case 1: // Bottom
+                    meteorX = Math.random() * window.innerWidth;
+                    meteorY = window.innerHeight + meteorSize;
+                    break;
+                case 2: // Left
+                    meteorX = -meteorSize;
+                    meteorY = Math.random() * window.innerHeight;
+                    break;
+                case 3: // Right
+                    meteorX = window.innerWidth + meteorSize;
+                    meteorY = Math.random() * window.innerHeight;
+                    break;
+            }
+
+            meteor.style.width = meteorSize + "px";
+            meteor.style.height = meteorSize + "px";
+            meteor.style.left = meteorX + "px";
+            meteor.style.top = meteorY + "px";
+
+            var player = document.getElementById("player");
+            var player_container = document.getElementById("player_container");
+            var playerRect = player.getBoundingClientRect();
+            var playerCenterX = playerRect.left + playerRect.width / 2;
+            var playerCenterY = playerRect.top + playerRect.height / 2;
+
+            var meteorInterval = setInterval(function() {
+                if (playerHit) return;
+                var meteorRect = meteor.getBoundingClientRect();
+                var meteorCenterX = meteorRect.left + meteorRect.width / 2;
+                var meteorCenterY = meteorRect.top + meteorRect.height / 2;
+
+                var angle = Math.atan2(playerCenterY - meteorCenterY, playerCenterX - meteorCenterX);
+                var meteorSpeedX = Math.cos(angle) * meteorSpeed;
+                var meteorSpeedY = Math.sin(angle) * meteorSpeed;
+
+                meteorX += meteorSpeedX;
+                meteorY += meteorSpeedY;
+
+                meteor.style.left = meteorX + "px";
+                meteor.style.top = meteorY + "px";
+
+                // Collision detection with bullets
+                var bullets = document.getElementsByClassName("bullet");
+                for (var i = 0; i < bullets.length; i++) {
+                    var bullet = bullets[i];
+                    var bulletRect = bullet.getBoundingClientRect();
+                    if (meteorRect.left < bulletRect.right && meteorRect.right > bulletRect.left && meteorRect.top < bulletRect.bottom && meteorRect.bottom > bulletRect.top) {
+                        astroBucks = astroBucks + meteorReward;
+                        console.log(astroBucks + meteorReward);
+                        document.getElementById("astroBucks").innerHTML = "astro bucks: $" + astroBucks;
+                        clearInterval(meteorInterval);
+                        meteor.remove();
+                        bullet.remove();
+                    }
+                }
+
+                // Collision detection with player
+                if (meteorRect.left < playerRect.right && meteorRect.right > playerRect.left && meteorRect.top < playerRect.bottom && meteorRect.bottom > playerRect.top) {
+                    clearInterval(meteorInterval);
+                    meteor.remove();
+                    
+                    if (isGoldenMeteor) {
+                        // If it's a golden meteor, increase the bulletCount by 10
+                        bulletCount += goldenMeteorReward;
+                        console.log("Golden meteor hit you! Bullet count increased by: ", goldenMeteorReward);
+                        for (i = 0; i < goldenMeteorReward; i++) {
+                            var bullet = document.createElement("div");
+                            bullet.className = "bullets";
+                            bulletCountEl.appendChild(bullet);
+                        }
+                        AmmoSound.play();
+                    } 
+                    else if(isThisMultiShot){
+                        console.log("Multishot meteor hit you! Bullets multiplied by: ", multiShotMultiplier);
+                        isMultiShot = true;
+                        setTimeout(function(){
+                            isMultiShot = false;
+                        }, multiShotTimer);
+                    } 
+                    else if(isMoneyDrop){
+                        astroBucks = astroBucks + moneyDropAmount;
+                        document.getElementById("astroBucks").innerHTML = "astro bucks: $" + astroBucks;
+                        console.log("Money drop hit you! You got: $", moneyDropAmount);
+                    }
+                    else {
+                        if(shieldActive){
+                            shieldActive = false;
+                            shieldEl.style.display = "none";
+                            ShieldDownSound.play();
+                        }
+                        else{
+                            playerHit = true;
+
+                            ExplosionSound.play();
+
+                            var explosion = document.createElement("div");
+                            explosion.className = "explosion";
+                            explosion.style.left = (playerRect.left + playerRect.width / 2 ) + "px";
+                            explosion.style.top = (playerRect.top + playerRect.height / 2 ) + "px";
+                            player_container.appendChild(explosion);
+
+                            player.style.display = "none";
+
+                            Array.from(document.getElementsByClassName("meteor")).forEach(function(meteor, i) {
+                                meteor.remove();
+                            });
+
+                            Array.from(document.getElementsByClassName("star")).forEach(function(star, i) {
+                                star.style.display = "none";
+                            });
+                            
+                            // Remove explosion after animation
+                            setTimeout(function () {
+                                explosion.remove();
+                            }, 500);
+
+                            retry.style.display = "block";
+                        }
+                    }
+                }
+            }, 10);
+        }, meteorSpawnInterval);
+
+        // Stars
+
+        function makeStars(){
+            for (var i = 0; i < starCount; i++) {
+                var star = document.createElement("div");
+                star.className = "star";
+                document.body.appendChild(star);
+
+                var starSize = Math.random() * 5 + 1; // Random size between 1 and 6
+                var starX = Math.random() * window.innerWidth; // Random X position
+                var starY = Math.random() * window.innerHeight; // Random Y position
+
+                star.style.width = starSize + "px";
+                star.style.height = starSize + "px";
+                star.style.left = starX + "px";
+                star.style.top = starY + "px";
+            }
+        }
+
+        function startScoreInterval(){
+            if(!scoreInterval){
+                scoreInterval = setInterval(function(){
+                if(playerHit){
+                    scoreEl.innerHTML = "score: " + score;
+                    clearInterval(scoreInterval);
+                }
+                else{
+                    score++;
+                    scoreEl.innerHTML = "score: " + score;
+                }
+                }, 10);
+            }
+        }
+
+        function startBackgroundStars(){
+            backgroundStars = setInterval(function() {
+
+                if(dev === true){
+                    document.getElementById("dev").style.display = "block";
+                }
+                else{
+                    document.getElementById("dev").style.display = "none";
+                }
+    
+                var stars = document.getElementsByClassName("star");
+                for (var i = 0; i < stars.length; i++) {
+                    var star = stars[i];
+                    var starX = parseFloat(star.style.left.replace("px", ""));
+                    var starY = parseFloat(star.style.top.replace("px", ""));
+    
+                    var starSpeed = Math.random() * 2 + 1; // Random speed between 1 and 3
+    
+                    starX += starSpeed;
+                    if (starX > window.innerWidth) {
+                        starX = -parseFloat(star.style.width.replace("px", ""));
+                    }
+    
+                    star.style.left = starX + "px";
+                    star.style.top = starY + "px";
+                }
+            }, 10);    
+        }
+        
+        function restart(){
+            window.location.replace(
+                "meteors.html?dev=" + dev +
+                "&restarted=" + true +
+                "&coneAngle=" + coneAngle + 
+                "&starCount=" + starCount + 
+                "&meteorSpawnInterval=" + meteorSpawnInterval + 
+                "&multiShotChance=" + multiShotChance + 
+                "&multiShotTimer=" + multiShotTimer + 
+                "&multiShotMultiplier=" + multiShotMultiplier + 
+                "&bulletCountStart=" + bulletCountStart + 
+                "&goldenMeteorChance=" + goldenMeteorChance + 
+                "&goldenMeteorReward=" + goldenMeteorReward
+            );
+        }
+
+        function purchaseItem(item){
+            switch(item){
+                case 1:
+                    if(astroBucks >= 300 && !isMultiShot){
+                        astroBucks = astroBucks - 300;
+                        document.getElementById("astroBucks").innerHTML = "astro bucks: $" + astroBucks;
+                        console.log("You purchased multi shot! Bullets multiplied by: ", multiShotMultiplier, " for ", multiShotTimer / 1000, "seconds");
+                        isMultiShot = true;
+                        setTimeout(function(){
+                            isMultiShot = false;
+                        }, multiShotTimer);
+                    }
+                break;
+                case 2:
+                    if(astroBucks >= 500 && !shieldActive){
+                        astroBucks = astroBucks - 500;
+                        document.getElementById("astroBucks").innerHTML = "astro bucks: $" + astroBucks;
+                        shieldEl.style.display = "block";
+                        shieldActive = true;
+                        ShieldSound.play();
+                    }
+                break;
+                case 3:
+                    if(astroBucks >= 300){
+                        astroBucks = astroBucks - 300;
+                        bulletCount = bulletCount + 15;
+                        for (i = 0; i < 10; i++) {
+                            var bullet = document.createElement("div");
+                            bullet.className = "bullets";
+                            bulletCountEl.appendChild(bullet);
+                        }
+                        AmmoSound.play();
+                    }
+                break;
+            }
+        }
+
+        startScoreInterval();
+        makeStars();
+        startBackgroundStars();
+    </script>
+</body>
+</html>
