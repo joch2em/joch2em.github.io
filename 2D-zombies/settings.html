@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Options - 2D Zombie Game</title>
     <link rel="stylesheet" href="resources/css/menu.css">
 </head>
+
 <body>
     <?php
     $settingsJson = file_get_contents('settings.json');
@@ -23,13 +25,14 @@
         <ul>
             <li>
                 <label for="audioVolume">Audio Volume:</label>
-                <input type="range" id="audioVolume" name="audioVolume" min="0" max="100" value="<?php echo $audioVolume; ?>">
+                <input type="range" id="audioVolume" name="audioVolume" min="0" max="100"
+                    value="<?php echo $audioVolume; ?>">
             </li>
             <li>
                 <select name="difficulty" id="difficulty">
-                    <option value="easy" <?php if($difficulty == 'easy') echo 'selected'; ?>>Easy</option>
-                    <option value="normal" <?php if($difficulty == 'normal') echo 'selected'; ?>>Normal</option>
-                    <option value="hard" <?php if($difficulty == 'hard') echo 'selected'; ?>>Hard</option>
+                    <option value="easy" <?php if($difficulty=='easy' ) echo 'selected' ; ?>>Easy</option>
+                    <option value="normal" <?php if($difficulty=='normal' ) echo 'selected' ; ?>>Normal</option>
+                    <option value="hard" <?php if($difficulty=='hard' ) echo 'selected' ; ?>>Hard</option>
                 </select>
             </li>
             <li>
@@ -37,24 +40,28 @@
                 <div class="controls-container">
                     <?php foreach ($controls as $action => $key): ?>
                     <div class="control-setting">
-                        <span><?php echo ucfirst(str_replace('_', ' ', $action)); ?>:</span>
-                        <button class="control-button" data-action="<?php echo $action; ?>"><?php echo strtoupper($key); ?></button>
+                        <span>
+                            <?php echo ucfirst(str_replace('_', ' ', $action)); ?>:
+                        </span>
+                        <button class="control-button" data-action="<?php echo $action; ?>">
+                            <?php echo strtoupper($key); ?>
+                        </button>
                     </div>
                     <?php endforeach; ?>
                 </div>
             </li>
             <li class="alert"><span id="alert">Saved Settings!</span></li>
             <li><a href="#" onclick="saveSettings()">Save</a></li>
-            <li><a href="index.php">Back to Menu</a></li>
+            <li><a href="index.html">Back to Menu</a></li>
         </ul>
     </div>
     <script>
-        const controls = <?php echo json_encode($controls); ?>;
+        const controls = <? php echo json_encode($controls); ?>;
 
         const controlButtons = document.querySelectorAll('.control-button');
 
         controlButtons.forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function () {
                 const action = this.getAttribute('data-action');
                 const originalText = this.textContent;
                 this.textContent = 'Press any key...';
@@ -72,18 +79,18 @@
                         alert('This key cannot be assigned. Please choose another key.');
                         this.textContent = originalText;
                     } else {
-                        
+
                         let existingAction = null;
                         for (const [act, assignedKey] of Object.entries(controls)) {
                             if (assignedKey.toUpperCase() === key.toUpperCase()) {
                                 existingAction = act;
                                 break;
                             }
-                            else if(key === ' ' && assignedKey === 'SPACE'){
+                            else if (key === ' ' && assignedKey === 'SPACE') {
                                 existingAction = act;
                                 break;
                             }
-                            else if(key === 'SPACE' && assignedKey === ' '){
+                            else if (key === 'SPACE' && assignedKey === ' ') {
                                 existingAction = act;
                                 break;
                             }
@@ -98,14 +105,14 @@
                                 existingButton.textContent = controls[action];
                             }
                         }
-                        if(key === ' '){
+                        if (key === ' ') {
                             event.preventDefault();
                             this.textContent = "SPACE";
                         }
-                        else{
+                        else {
                             this.textContent = key.toUpperCase();
                         }
-                        
+
                         controls[action] = key;
                     }
 
@@ -116,15 +123,15 @@
             });
         });
 
-        function saveSettings(){
+        function saveSettings() {
             var audioVolume = document.getElementById('audioVolume').value;
             var difficulty = document.getElementById('difficulty').value;
-            var settings = <?php echo json_encode($settings); ?>;
+            var settings = <? php echo json_encode($settings); ?>;
             settings.audio_volume = audioVolume;
             settings.difficulty = difficulty;
             settings.controls = controls;
-            
-            fetch('save_settings.php', {
+
+            fetch('save_settings.html', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(settings)
@@ -150,4 +157,5 @@
         }
     </script>
 </body>
+
 </html>
