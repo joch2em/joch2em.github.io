@@ -10,40 +10,42 @@
 
 <body>
     <h1>My unfinished projects</h1>
-    <div id="projects-container"></div>
-
-    <script>
-        const excludedFiles = ["index.html", "resources", "css", "moving-button.html"];
-        const projectIcons = {
-            "heart-fights": "heart.png",
-            "2D-zombies": "zombie.png",
-            "rogue-light": "cross_holy.png",
-            "shrub-dubs": "bush.png",
-            "meteors.html": "meteor.png",
-            "button.html": "button.png"
-        };
-
-        fetch('.')
-            .then(response => response.text())
-            .then(data => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(data, 'text/html');
-                const files = Array.from(doc.querySelectorAll('a')).map(a => a.href.split('/').pop());
-
-                files.forEach(file => {
-                    if (!excludedFiles.includes(file) && file !== "." && file !== "..") {
-                        let displayName = file.replace(/-/g, ' ').replace(/\.[^/.]+$/, "").replace(/\b\w/g, l => l.toUpperCase());
-                        let container = document.getElementById('projects-container');
-
-                        if (projectIcons[file]) {
-                            container.innerHTML += `<div class='heart_fights_container'><img src='resources/${projectIcons[file]}' alt='*' class='heart'><a href='${file}' class='heart_fights'>${displayName}</a><img src='resources/${projectIcons[file]}' alt='*' class='heart'></div>`;
-                        } else {
-                            container.innerHTML += `<a href='${file}'>${displayName}</a>`;
-                        }
-                    }
-                });
-            });
-    </script>
+    <div id="projects-container">
+        <div class='heart_fights_container'>
+            <img src='resources/heart.png' alt='*' class='heart'>
+            <a href='heart-fights/' class='heart_fights'>Heart Fights</a>
+            <img src='resources/heart.png' alt='*' class='heart'>
+        </div>
+        <div class='heart_fights_container'>
+            <img src='resources/zombie.png' alt='*' class='heart'>
+            <a href='2D-zombies/' class='heart_fights'>2D Zombies</a>
+            <img src='resources/zombie.png' alt='*' class='heart'>
+        </div>
+        <div class='heart_fights_container'>
+            <img src='resources/cross_holy.png' alt='*' class='heart'>
+            <a href='rogue-light/' class='heart_fights'>Rogue Light</a>
+            <img src='resources/cross_holy.png' alt='*' class='heart'>
+        </div>
+        <div class='heart_fights_container'>
+            <img src='resources/bush.png' alt='*' class='heart'>
+            <a href='shrub-dubs/' class='heart_fights'>Shrub Dubs</a>
+            <img src='resources/bush.png' alt='*' class='heart'>
+        </div>
+        <div class='heart_fights_container'>
+            <img src='resources/meteor.png' alt='*' class='heart'>
+            <a href='meteors.html' class='heart_fights'>Meteors</a>
+            <img src='resources/meteor.png' alt='*' class='heart'>
+        </div>
+        <div class='heart_fights_container'>
+            <div class='button-base'>
+                <div class='the-button'></div>
+            </div>
+            <a href='button.html'>Button</a>
+            <div class='button-base'>
+                <div class='the-button'></div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
