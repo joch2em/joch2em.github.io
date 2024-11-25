@@ -7,11 +7,26 @@
     <title>RogueLight - Layer 1</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/phaser-raycaster@0.10.10/dist/phaser-raycaster.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/rot-js@2.0.0/lib/rot.min.js"></script>
+    <script src="../../resources/js/mrpas.js"></script>
+
     <link rel="stylesheet" href="style.css">
+    <style>
+        .back-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 10px 20px;
+            background-color: #f0f0f0;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+    </style>
 </head>
 
 <body>
+    <button class="back-button" onclick="window.location.href='../../index.html'">Back to Main Menu</button>
     <script>
         // Configuration variables
         const tileSize = 40;
@@ -39,17 +54,11 @@
                 preload: preload,
                 create: create,
                 update: update
-            },
-            plugins: {
-                scene: [{
-                    key: 'PhaserRaycaster',
-                    plugin: PhaserRaycaster,
-                    mapping: 'raycasterPlugin'
-                }]
             }
         };
 
         const game = new Phaser.Game(config);
+        let level; // Define the level variable
 
         function preload() {
             this.load.image('wall', '../../resources/img/stone_brick_texture.png'); // Preload the wall texture
@@ -59,6 +68,9 @@
             // Create walls as simple rectangles
             this.walls = this.physics.add.staticGroup();
             this.exposedWalls = this.physics.add.staticGroup(); // Group for exposed walls
+            this.rooms = this.add.group(); // Group for rooms
+            this.features = this.add.group(); // Group for features
+
             const seed = Math.random().toString(36).substr(2, 9); // Generate a random seed
             console.log('Seed:', seed);
             const playerPosition = generateLevel(this, seed); // Pass the random seed
@@ -68,8 +80,10 @@
             this.physics.add.existing(this.player);
             this.player.body.setCollideWorldBounds(true);
 
-            // Enable cursor keys for player movement
+            // Enable arrow keys for player movement
             this.cursors = this.input.keyboard.createCursorKeys();
+
+            console.log(localStorage);
 
             // Add collider after player and walls are created
             this.physics.add.collider(this.player, this.walls);
@@ -81,54 +95,17 @@
             // Adjust world bounds to match the dungeon size
             this.physics.world.setBounds(0, 0, levelWidth * tileSize, levelHeight * tileSize);
 
-            // Initialize the raycaster
-            this.raycaster = this.raycasterPlugin.createRaycaster({
-                debug: true, // Disable debug mode for better performance
-                mapSegmentCount: 128 // Reduce the number of segments for better performance
-            });
-            this.ray1 = this.raycaster.createRay({
-                origin: {
-                    x: this.player.x,
-                    y: this.player.y
-                },
-                angle: 0,
-                collisionRange: 500 // Limit the range to reduce calculations
-            });
-            this.ray2 = this.raycaster.createRay({
-                origin: {
-                    x: this.player.x,
-                    y: this.player.y
-                },
-                angle: 0,
-                collisionRange: 500 // Limit the range to reduce calculations
-            });
-            this.ray3 = this.raycaster.createRay({
-                origin: {
-                    x: this.player.x,
-                    y: this.player.y
-                },
-                angle: 0,
-                collisionRange: 500 // Limit the range to reduce calculations
-            });
-            this.ray4 = this.raycaster.createRay({
-                origin: {
-                    x: this.player.x,
-                    y: this.player.y
-                },
-                angle: 0,
-                collisionRange: 500 // Limit the range to reduce calculations
+            // Initialize the Mrpas field of view algorithm
+            this.fov = new Mrpas(levelWidth, levelHeight, (x, y) => {
+                const tile = level[y] && level[y][x];
+                return tile === 0 || tile === 2; // 0: empty space, 2: exposed wall
             });
 
-            // Set the raycaster to map the walls
-            this.raycaster.mapGameObjects(this.exposedWalls.getChildren());
-
-            // Create a graphics object for the viewing cone
-            this.graphics = this.add.graphics({
-                fillStyle: {
-                    color: 0xffffff,
-                    alpha: 0.2
-                }
-            });
+            // Set all tiles, rooms, and features to be invisible initially
+            this.walls.getChildren().forEach(wall => wall.setAlpha(0));
+            this.exposedWalls.getChildren().forEach(wall => wall.setAlpha(0));
+            this.rooms.getChildren().forEach(room => room.setAlpha(0));
+            this.features.getChildren().forEach(feature => feature.setAlpha(0));
 
             // Frame counter for optimizing drawing frequency
             this.frameCounter = 0;
@@ -149,73 +126,82 @@
                 this.player.body.setVelocityY(playerSpeed);
             }
 
-            // Update the rays' origin to the player's position
-            this.ray1.setOrigin(this.player.x, this.player.y);
-            this.ray2.setOrigin(this.player.x, this.player.y);
-            this.ray3.setOrigin(this.player.x, this.player.y);
-            this.ray4.setOrigin(this.player.x, this.player.y);
-
             // Only update the viewing cone every 5 frames
-            if (this.frameCounter % 10 === 0) {
-                const intersections = [];
-                for (let angle = 0; angle < 360; angle += 15) { // Adjust the step to balance performance and accuracy
-                    this.ray1.setAngle(Phaser.Math.DegToRad(angle));
-                    this.ray2.setAngle(Phaser.Math.DegToRad(angle + 5)); // Offset the second ray by 2 degrees
-                    this.ray3.setAngle(Phaser.Math.DegToRad(angle + 10)); // Offset the third ray by 4 degrees
-                    this.ray4.setAngle(Phaser.Math.DegToRad(angle + 15)); // Offset the fourth ray by 6 degrees
-                    const intersection1 = this.ray1.cast();
-                    const intersection2 = this.ray2.cast();
-                    const intersection3 = this.ray3.cast();
-                    const intersection4 = this.ray4.cast();
-                    if (intersection1) {
-                        intersections.push(intersection1);
-                    }
-                    if (intersection2) {
-                        intersections.push(intersection2);
-                    }
-                    if (intersection3) {
-                        intersections.push(intersection3);
-                    }
-                    if (intersection4) {
-                        intersections.push(intersection4);
-                    }
-                }
-
-                // Clear the previous graphics
-                this.graphics.clear();
-
-                // Draw the viewing cone
-                this.graphics.fillStyle(0xffffff, 0.2);
-                this.graphics.beginPath();
-                this.graphics.moveTo(this.player.x, this.player.y);
-                intersections.forEach(intersection => {
-                    this.graphics.lineTo(intersection.x, intersection.y);
+            if (this.frameCounter % 5 === 0) {
+                // Set all tiles, rooms, and features to be slightly visible if seen, invisible if not seen
+                this.walls.getChildren().forEach(wall => {
+                    wall.setAlpha(wall.seen ? 0.5 : 0);
                 });
-                this.graphics.closePath();
-                this.graphics.fillPath();
+                this.exposedWalls.getChildren().forEach(wall => {
+                    wall.setAlpha(wall.seen ? 0.5 : 0);
+                });
+                this.rooms.getChildren().forEach(room => {
+                    room.setAlpha(room.seen ? 0.5 : 0);
+                });
+                this.features.getChildren().forEach(feature => {
+                    feature.setAlpha(feature.seen ? 0.5 : 0);
+                });
+
+                // Compute the field of view
+                this.fov.compute(
+                    Math.floor(this.player.x / tileSize),
+                    Math.floor(this.player.y / tileSize),
+                    10,
+                    (x, y) => level[y] && level[y][x] === 0, // isVisible function
+                    (x, y) => { // setVisible function
+                        const tile = level[y] && level[y][x];
+                        if (tile === 0) {
+                            const room = this.rooms.getChildren().find(r => r.x === x * tileSize && r.y === y * tileSize);
+                            if (room) {
+                                room.setAlpha(1);
+                                room.seen = true;
+                            }
+                        } else if (tile === 1 || tile === 2) {
+                            const wall = this.walls.getChildren().find(w => w.x === x * tileSize && w.y === y * tileSize);
+                            if (wall) {
+                                wall.setAlpha(1);
+                                wall.seen = true;
+                            }
+                        }
+                        const feature = this.features.getChildren().find(f => f.x === x * tileSize && f.y === y * tileSize);
+                        if (feature) {
+                            feature.setAlpha(1);
+                            feature.seen = true;
+                        }
+                    }
+                );
             }
 
             // Increment the frame counter
             this.frameCounter++;
         }
 
+        function isTransparent(x, y) {
+            // Check if the tile at (x, y) is transparent
+            const tile = level[y] && level[y][x];
+            return tile === 0; // Only empty space is transparent
+        }
+
         const features = ['chest', 'enemies', 'trap'];
 
         function addFeature(scene, feature, x, y) {
+            let featureSprite;
             switch (feature) {
                 case 'chest':
                     // Mockup for adding a chest
-                    scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, 0xffd700).setOrigin(0); // Gold color for chest
+                    featureSprite = scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, 0xffd700).setOrigin(0); // Gold color for chest
                     break;
                 case 'enemies':
                     // Mockup for adding enemies
-                    scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, 0xff0000).setOrigin(0); // Red color for enemies
+                    featureSprite = scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, 0xff0000).setOrigin(0); // Red color for enemies
                     break;
                 case 'trap':
                     // Mockup for adding a trap
-                    scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, 0xcfcfcf).setOrigin(0); // grey color for trap
+                    featureSprite = scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, 0xcfcfcf).setOrigin(0); // grey color for trap
                     break;
             }
+            scene.features.add(featureSprite);
+            featureSprite.setAlpha(0); // Set initial opacity to 0
         }
 
         function generateLevel(scene, seed) {
@@ -223,7 +209,7 @@
             Math.seedrandom(seed);
 
             // Create a 2D array to represent the level
-            const level = Array.from({
+            level = Array.from({
                 length: levelHeight
             }, () => Array(levelWidth).fill(1));
 
@@ -235,7 +221,9 @@
                     }
                 }
                 // Draw the room with the specified color
-                scene.add.rectangle(x * tileSize, y * tileSize, width * tileSize, height * tileSize, color).setOrigin(0);
+                const room = scene.add.rectangle(x * tileSize, y * tileSize, width * tileSize, height * tileSize, color).setOrigin(0);
+                scene.rooms.add(room);
+                room.setAlpha(0); // Set initial opacity to 0
                 // Mark walls around the room as exposed
                 markExposedWalls(x, y, width, height);
             }
@@ -246,8 +234,12 @@
                     if (level[y][x] !== 0) {
                         level[y][x] = 0;
                         level[y + 1][x] = 0; // Make the hallway two tiles wide
-                        scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, color).setOrigin(0);
-                        scene.add.rectangle(x * tileSize, (y + 1) * tileSize, tileSize, tileSize, color).setOrigin(0);
+                        const hallway = scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, color).setOrigin(0);
+                        scene.rooms.add(hallway);
+                        hallway.setAlpha(0); // Set initial opacity to 0
+                        const hallway2 = scene.add.rectangle(x * tileSize, (y + 1) * tileSize, tileSize, tileSize, color).setOrigin(0);
+                        scene.rooms.add(hallway2);
+                        hallway2.setAlpha(0); // Set initial opacity to 0
                         // Mark walls around the hallway as exposed
                         markExposedWalls(x, y, 1, 2);
                     }
@@ -260,8 +252,12 @@
                     if (level[y][x] !== 0) {
                         level[y][x] = 0;
                         level[y][x + 1] = 0; // Make the hallway two tiles wide
-                        scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, color).setOrigin(0);
-                        scene.add.rectangle((x + 1) * tileSize, y * tileSize, tileSize, tileSize, color).setOrigin(0);
+                        const hallway = scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, color).setOrigin(0);
+                        scene.rooms.add(hallway);
+                        hallway.setAlpha(0); // Set initial opacity to 0
+                        const hallway2 = scene.add.rectangle((x + 1) * tileSize, y * tileSize, tileSize, tileSize, color).setOrigin(0);
+                        scene.rooms.add(hallway2);
+                        hallway2.setAlpha(0); // Set initial opacity to 0
                         // Mark walls around the hallway as exposed
                         markExposedWalls(x, y, 2, 1);
                     }
@@ -333,7 +329,9 @@
             // Add an exit tile in the exit room
             const exitTileX = exitRoom.x + Math.floor(exitRoom.width / 2);
             const exitTileY = exitRoom.y + Math.floor(exitRoom.height / 2);
-            scene.add.rectangle(exitTileX * tileSize, exitTileY * tileSize, tileSize, tileSize, exitTileColor).setOrigin(0); // Blue color for the exit tile
+            const exitTile = scene.add.rectangle(exitTileX * tileSize, exitTileY * tileSize, tileSize, tileSize, exitTileColor).setOrigin(0); // Blue color for the exit tile
+            scene.features.add(exitTile);
+            exitTile.setAlpha(0); // Set initial opacity to 0
 
             // Connect rooms with hallways
             for (let i = 1; i < rooms.length; i++) {
@@ -347,13 +345,8 @@
 
                 // Create L-shaped hallways
                 if (prevCenterX !== currCenterX && prevCenterY !== currCenterY) {
-                    // if (Math.random() < 0.5) {
-                    //     createHorizontalHallway(prevCenterX, currCenterX, prevCenterY, 0x797979);
-                    //     createVerticalHallway(prevCenterY, currCenterY, currCenterX - 1, 0x1f1f1f);
-                    // } else {
                     createVerticalHallway(prevCenterY - 1, currCenterY + 1, prevCenterX, 0x797979);
                     createHorizontalHallway(prevCenterX, currCenterX + 1, currCenterY, 0x1f1f1f);
-                    // }
                 } else if (prevCenterX !== currCenterX) {
                     createHorizontalHallway(prevCenterX, currCenterX, prevCenterY, 0x6c8a58);
                 } else if (prevCenterY !== currCenterY) {
@@ -368,11 +361,13 @@
                         const wall = scene.add.image(x * tileSize, y * tileSize, 'wall').setOrigin(0);
                         scene.physics.add.existing(wall, true);
                         scene.walls.add(wall);
+                        wall.setAlpha(0); // Set initial opacity to 0
                     } else if (level[y][x] === 2) {
                         const wall = scene.add.image(x * tileSize, y * tileSize, 'wall').setOrigin(0);
                         scene.physics.add.existing(wall, true);
                         scene.walls.add(wall);
                         scene.exposedWalls.add(wall); // Add to exposed walls group
+                        wall.setAlpha(0); // Set initial opacity to 0
                     }
                 }
             }

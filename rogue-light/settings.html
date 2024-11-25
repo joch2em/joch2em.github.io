@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - RogueLight</title>
+    <link rel="stylesheet" href="dungeon/layer_1/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        form {
+            background: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 200px;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+
+        button[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background: #007BFF;
+            color: #000000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button[type="button"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #f4f4f4;
+            cursor: pointer;
+        }
+
+        button[type="button"].active {
+            background: #e0e0e0;
+            border-color: #007BFF;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Settings</h1>
+    <form id="settings-form">
+        <label for="upKey">Move Up:</label>
+        <button type="button" id="upKey" name="upKey">ArrowUp</button><br>
+        <label for="downKey">Move Down:</label>
+        <button type="button" id="downKey" name="downKey">ArrowDown</button><br>
+        <label for="leftKey">Move Left:</label>
+        <button type="button" id="leftKey" name="leftKey">ArrowLeft</button><br>
+        <label for="rightKey">Move Right:</label>
+        <button type="button" id="rightKey" name="rightKey">ArrowRight</button><br>
+        <button type="submit" style="color: #ffffff;">Save</button>
+    </form>
+    <button id="back-button" style="margin-top: 20px; background: #6c757d; color: #ffffff;">Back to Main Menu</button>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const form = document.getElementById('settings-form');
+            const upKeyButton = document.getElementById('upKey');
+            const downKeyButton = document.getElementById('downKey');
+            const leftKeyButton = document.getElementById('leftKey');
+            const rightKeyButton = document.getElementById('rightKey');
+            const backButton = document.getElementById('back-button');
+
+            // Load saved settings
+            upKeyButton.textContent = localStorage.getItem('rogueLight-upKey') || 'ArrowUp';
+            downKeyButton.textContent = localStorage.getItem('rogueLight-downKey') || 'ArrowDown';
+            leftKeyButton.textContent = localStorage.getItem('rogueLight-leftKey') || 'ArrowLeft';
+            rightKeyButton.textContent = localStorage.getItem('rogueLight-rightKey') || 'ArrowRight';
+
+            const keyButtons = [upKeyButton, downKeyButton, leftKeyButton, rightKeyButton];
+
+            keyButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    button.classList.add('active');
+                    const keyHandler = (event) => {
+                        button.textContent = event.key;
+                        button.classList.remove('active');
+                        document.removeEventListener('keydown', keyHandler);
+                    };
+                    document.addEventListener('keydown', keyHandler);
+                });
+            });
+
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                localStorage.setItem('rogueLight-upKey', upKeyButton.textContent);
+                localStorage.setItem('rogueLight-downKey', downKeyButton.textContent);
+                localStorage.setItem('rogueLight-leftKey', leftKeyButton.textContent);
+                localStorage.setItem('rogueLight-rightKey', rightKeyButton.textContent);
+                alert('Settings saved!');
+            });
+
+            backButton.addEventListener('click', () => {
+                window.location.href = 'index.html'; // Adjust the URL as needed
+            });
+        });
+    </script>
+</body>
+
+</html>
