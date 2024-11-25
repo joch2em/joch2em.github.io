@@ -566,34 +566,27 @@ function blockZombies(cell) {
     // console.log(`Wall-nut at (${cell.row}, ${cell.col}) blocks zombies.`);
 }
 
+let gameTimer = 0; // Initialize game timer
+
 function handleWaves() {
     if (isPaused) { return; }
-    const currentTime = Date.now() - startTime;
 
-    while (waveIndex < waves.length && currentTime >= waves[waveIndex].time) {
+    while (waveIndex < waves.length && gameTimer >= waves[waveIndex].time) {
         const wave = waves[waveIndex];
         spawnEnemy(wave.row, wave.speed);
         waveIndex++;
     }
 }
 
-function checkEnemyHealth() {
-    if (isPaused) { return; }
-    enemies.forEach((enemy, index) => {
-        if (enemy.health <= 0) {
-            enemies.splice(index, 1);
-        }
-    });
-}
-
 function gameLoop() {
+    if (!isPaused) {
+        gameTimer += 1000 / 60; // Increment game timer by the frame duration
+    }
     handleWaves();
     drawGrid();
     handlePlantActions();
     checkEnemyHealth();
 }
-
-let gameLoopInterval;
 
 function startGameLoop() {
     gameLoopInterval = setInterval(gameLoop, 1000 / 60);
@@ -605,6 +598,15 @@ function stopGameLoop() {
     clearInterval(gameLoopInterval);
     isPaused = true;
     pauseMenu.style.display = 'block';
+}
+
+function checkEnemyHealth() {
+    if (isPaused) { return; }
+    enemies.forEach((enemy, index) => {
+        if (enemy.health <= 0) {
+            enemies.splice(index, 1);
+        }
+    });
 }
 
 document.addEventListener('visibilitychange', () => {
