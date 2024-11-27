@@ -413,17 +413,6 @@
                 }
             }
 
-
-            function markExposedWalls(x, y, width, height) {
-                for (let i = y - 1; i <= y + height; i++) {
-                    for (let j = x - 1; j <= x + width; j++) {
-                        if (i >= 0 && i < levelHeight && j >= 0 && j < levelWidth && level[i][j] === 1) {
-                            level[i][j] = 2; // Mark as exposed wall
-                        }
-                    }
-                }
-            }
-
             // Create the starting room (4x4) at the top-left corner
             const startX = 1;
             const startY = 1;

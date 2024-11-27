@@ -77,14 +77,14 @@
 <body>
     <h1>Settings</h1>
     <form id="settings-form">
-        <!-- <label for="upKey">Move Up:</label>
+        <label for="upKey">Move Up:</label>
         <button type="button" id="upKey" name="upKey">ArrowUp</button><br>
         <label for="downKey">Move Down:</label>
         <button type="button" id="downKey" name="downKey">ArrowDown</button><br>
         <label for="leftKey">Move Left:</label>
         <button type="button" id="leftKey" name="leftKey">ArrowLeft</button><br>
         <label for="rightKey">Move Right:</label>
-        <button type="button" id="rightKey" name="rightKey">ArrowRight</button><br> -->
+        <button type="button" id="rightKey" name="rightKey">ArrowRight</button><br>
         <label for="seed">Seed:</label>
         <input type="text" id="seed" name="seed" placeholder="Leave blank for random"><br>
         <button type="button" id="delete-seed">Delete Seed</button><br>
@@ -92,7 +92,9 @@
         <input type="checkbox" id="revealMinimap" name="revealMinimap"><br>
         <button type="submit" style="color: #ffffff;">Save</button>
     </form>
-    <!-- <button id="back-button" style="margin-top: 20px; background: #6c757d; color: #ffffff;">Back to Main Menu</button> -->
+    <!-- <a href="index.html"> -->
+    <button id="back-button" style="margin-top: 20px; background: #6c757d; color: #ffffff;">Start Game</button>
+    <!-- </a> -->
     <script>
         document.addEventListener('DOMContentLoaded', (event) => {
             const form = document.getElementById('settings-form');
@@ -149,7 +151,18 @@
             });
 
             backButton.addEventListener('click', () => {
-                window.location.href = 'index.html'; // Adjust the URL as needed
+                // Save settings before redirecting
+                localStorage.setItem('rogueLight-upKey', upKeyButton.textContent);
+                localStorage.setItem('rogueLight-downKey', downKeyButton.textContent);
+                localStorage.setItem('rogueLight-leftKey', leftKeyButton.textContent);
+                localStorage.setItem('rogueLight-rightKey', rightKeyButton.textContent);
+                localStorage.setItem('rogueLight-revealMinimap', revealMinimapCheckbox.checked);
+                if (seedInput.value) {
+                    localStorage.setItem('rogueLight-seed', seedInput.value);
+                } else {
+                    localStorage.removeItem('rogueLight-seed');
+                }
+                window.location.href = 'dungeon/layer_1/index.html'; // Redirect to the game
             });
         });
     </script>
