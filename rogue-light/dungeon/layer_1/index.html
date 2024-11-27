@@ -9,77 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/rot-js@2.0.0/lib/rot.min.js"></script>
     <script src="../../resources/js/mrpas.js"></script>
-
     <link rel="stylesheet" href="style.css">
-    <style>
-        .back-button {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            padding: 10px 20px;
-            background-color: #f0f0f0;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .minimap {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 225px;
-            /* Adjusted width to maintain aspect ratio */
-            height: 100px;
-            /* Adjusted height to maintain aspect ratio */
-            background-color: rgba(0, 0, 0, 0.5);
-            border: 1px solid #fff;
-        }
-
-        .legend {
-            position: absolute;
-            top: 50%;
-            left: 10px;
-            transform: translateY(-50%);
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 10px;
-            border: 1px solid #000;
-            font-size: 14px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            margin-right: 20px;
-        }
-
-        .seed-display {
-            position: absolute;
-            top: 120px;
-            /* Adjusted to be just under the minimap */
-            right: 10px;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 5px;
-            border: 1px solid #000;
-            font-size: 14px;
-        }
-
-        #playerSpeed {
-            width: 25px;
-            margin-right: 8px;
-            border: none;
-            background: none;
-            outline: none;
-            font-size: 14px;
-            color: inherit;
-            padding: 0;
-        }
-    </style>
 </head>
 
 <body>
