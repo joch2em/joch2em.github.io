@@ -55,7 +55,7 @@
         .legend-color {
             width: 20px;
             height: 20px;
-            margin-right: 10px;
+            margin-right: 20px;
         }
 
         .seed-display {
@@ -67,6 +67,17 @@
             padding: 5px;
             border: 1px solid #000;
             font-size: 14px;
+        }
+
+        #playerSpeed {
+            width: 25px;
+            margin-right: 8px;
+            border: none;
+            background: none;
+            outline: none;
+            font-size: 14px;
+            color: inherit;
+            padding: 0;
         }
     </style>
 </head>
@@ -91,20 +102,26 @@
             <div class="legend-color" style="background-color: #cfcfcf;"></div>
             <span>Trap</span>
         </div>
+        <div class="legend-item">
+            <input class="legend-color" id="playerSpeed">
+            <span>Player Speed</span>
+        </div>
     </div>
     <div class="seed-display" id="seed-display"></div>
     <script>
         // Configuration variables
-        const tileSize = 40;
-        const levelWidth = 90; // Increased level width
-        const levelHeight = 40; // Increased level height
-        const playerColor = 0x00ff00; // Player color
-        const exitRoomColor = 0x006400; // Exit room color
-        const exitTileColor = 0x0000ff; // Exit tile color
-        const playerSpeed = 260; // Player speed
-        const normalRoomColor = 0xbdb356; // Normal room color
+        const tileSize = 40;                // tile size in pixels
+        const levelWidth = 90;              // level width in tiles
+        const levelHeight = 40;             // level height in tiles
+        const playerColor = 0x00ff00;       // Player color
+        const exitRoomColor = 0x006400;     // Exit room color
+        const exitTileColor = 0x0000ff;     // Exit tile color
+        let playerSpeed = 260;            // Player speed 
+        const normalRoomColor = 0xbdb356;   // Normal room color
         const revealMinimap = JSON.parse(localStorage.getItem('rogueLight-revealMinimap')) || false; // Boolean to control minimap visibility
         let seed = localStorage.getItem('rogueLight-seed') || Math.random().toString(36).substr(2, 9); // Global variable for the seed
+
+        const playerSpeedElement = document.getElementById('playerSpeed');
 
         let config = {
             type: Phaser.AUTO,
@@ -126,38 +143,37 @@
         };
 
         const game = new Phaser.Game(config);
-        let level; // Define the level variable
+        let level;
         let minimap;
         let minimapContext;
         let rooms = []; // Array to store rooms with their features and colors
 
         function preload() {
-            this.load.image('wall', '../../resources/img/stone_brick_texture.png'); // Preload the wall texture
+            this.load.image('wall', '../../resources/img/stone_brick_texture.png');
         }
 
+        playerSpeedElement.value = `${playerSpeed}`;
+
         function create() {
-            // Create walls as simple rectangles
             this.walls = this.physics.add.staticGroup();
-            this.exposedWalls = this.physics.add.staticGroup(); // Group for exposed walls
-            this.rooms = this.add.group(); // Group for rooms
-            this.features = this.add.group(); // Group for features
+            this.exposedWalls = this.physics.add.staticGroup();
+            this.rooms = this.add.group();
+            this.features = this.add.group();
 
             // Use the global seed variable or generate a random one if it is empty
             const seedValue = seed || Math.random().toString(36).substr(2, 9);
             console.log('Seed:', seedValue);
-            const playerPosition = generateLevel(this, seedValue); // Pass the seed
+            const playerPosition = generateLevel(this, seedValue);
 
-            // Create player as a simple rectangle at the determined position
+            // Create player as a simple rectangle
             this.player = this.add.rectangle(playerPosition.x, playerPosition.y, tileSize, tileSize, playerColor);
             this.physics.add.existing(this.player);
             this.player.body.setCollideWorldBounds(true);
 
-            // Enable arrow keys for player movement
             this.cursors = this.input.keyboard.createCursorKeys();
 
             console.log(localStorage);
 
-            // Add collider after player and walls are created
             this.physics.add.collider(this.player, this.walls);
 
             // Set up the camera to follow the player
@@ -170,7 +186,7 @@
             // Initialize the Mrpas field of view algorithm
             this.fov = new Mrpas(levelWidth, levelHeight, (x, y) => {
                 const tile = level[y] && level[y][x];
-                return tile === 0; // Only empty space is transparent
+                return tile === 0;
             });
 
             // Set all tiles, rooms, and features to be invisible initially
@@ -179,7 +195,6 @@
             this.rooms.getChildren().forEach(room => room.setAlpha(0));
             this.features.getChildren().forEach(feature => feature.setAlpha(0));
 
-            // Frame counter for optimizing drawing frequency
             this.frameCounter = 0;
 
             minimap = document.querySelector('.minimap');
@@ -187,10 +202,9 @@
             minimap.width = levelWidth;
             minimap.height = levelHeight;
 
-            // Bind the updateMinimap function to the current scene context
             this.updateMinimap = updateMinimap.bind(this);
 
-            // Reveal the whole minimap if the revealMinimap flag is true
+            // Reveal the whole map if the revealMinimap flag is true
             if (revealMinimap) {
                 this.rooms.getChildren().forEach(room => {
                     room.setAlpha(1);
@@ -210,6 +224,16 @@
         }
 
         function update() {
+            // Update player speed every 30 frames
+            if (this.frameCounter % 30 === 0) {
+                try {
+                    playerSpeed = parseInt(playerSpeedElement.value);
+                } catch (error) {
+                    alert('Invalid player speed value!');
+                    console.error(error);
+                }
+            }
+
             this.player.body.setVelocity(0);
 
             if (this.cursors.left.isDown) {
@@ -224,7 +248,7 @@
                 this.player.body.setVelocityY(playerSpeed);
             }
 
-            // Only update the viewing cone every 5 frames
+            // Only update the FoV every 5 frames
             if (this.frameCounter % 5 === 0) {
                 // Set all tiles, rooms, and features to be slightly visible if seen, invisible if not seen
                 this.walls.getChildren().forEach(wall => {
@@ -245,8 +269,8 @@
                     Math.floor(this.player.x / tileSize),
                     Math.floor(this.player.y / tileSize),
                     10,
-                    (x, y) => level[y] && level[y][x] === 0, // isVisible function
-                    (x, y) => { // setVisible function
+                    (x, y) => level[y] && level[y][x] === 0,
+                    (x, y) => {
                         const tile = level[y] && level[y][x];
                         if (tile === 0) {
                             const room = this.rooms.getChildren().find(r => r.x === x * tileSize && r.y === y * tileSize);
@@ -271,8 +295,6 @@
 
                 this.updateMinimap();
             }
-
-            // Increment the frame counter
             this.frameCounter++;
         }
 
@@ -281,22 +303,22 @@
             // Draw rooms on the minimap
             this.rooms.getChildren().forEach(tile => {
                 if (tile.seen || revealMinimap) {
-                    minimapContext.fillStyle = '#000'; // Yellow color for rooms
+                    minimapContext.fillStyle = '#000';              // Yellow color for rooms
                     minimapContext.fillRect(tile.x / tileSize, tile.y / tileSize, 1, 1);
                 }
             });
             // Draw features on the minimap
             this.features.getChildren().forEach(feature => {
                 if (feature.seen) {
-                    if (feature.fillColor === 0xffd700) { // Chest color
+                    if (feature.fillColor === 0xffd700) {           // Chest color
                         minimapContext.fillStyle = '#ffd700';
-                    } else if (feature.fillColor === 0xff0000) { // Enemies color
+                    } else if (feature.fillColor === 0xff0000) {    // Enemies color
                         minimapContext.fillStyle = '#ff0000';
-                    } else if (feature.fillColor === 0xcfcfcf) { // Trap color
+                    } else if (feature.fillColor === 0xcfcfcf) {    // Trap color
                         minimapContext.fillStyle = '#cfcfcf';
-                    } else if (feature.fillColor === 0x006400) { // Exit room color
+                    } else if (feature.fillColor === 0x006400) {    // Exit room color
                         minimapContext.fillStyle = '#006400';
-                    } else if (feature.fillColor === 0x0000ff) { // Exit tile color
+                    } else if (feature.fillColor === 0x0000ff) {    // Exit tile color
                         minimapContext.fillStyle = '#5454ff';
                     }
                     minimapContext.fillRect(feature.x / tileSize, feature.y / tileSize, 1, 1);
@@ -305,19 +327,18 @@
             // Draw exposed walls on the minimap
             this.exposedWalls.getChildren().forEach(wall => {
                 if (wall.seen || revealMinimap) {
-                    minimapContext.fillStyle = '#d3d3d3'; // Light gray color for exposed walls
+                    minimapContext.fillStyle = '#d3d3d3';
                     minimapContext.fillRect(wall.x / tileSize, wall.y / tileSize, 1, 1);
                 }
             });
             // Draw player position on minimap
-            minimapContext.fillStyle = '#00ff00'; // Player color
+            minimapContext.fillStyle = '#00ff00';
             minimapContext.fillRect(Math.floor(this.player.x / tileSize), Math.floor(this.player.y / tileSize), 1, 1);
         }
 
         function isTransparent(x, y) {
-            // Check if the tile at (x, y) is transparent
             const tile = level[y] && level[y][x];
-            return tile === 0; // Only empty space is transparent
+            return tile === 0;
         }
 
         const features = ['chest', 'enemies', 'trap'];
@@ -339,7 +360,7 @@
                     break;
             }
             scene.features.add(featureSprite);
-            featureSprite.setAlpha(0); // Set initial opacity to 0
+            featureSprite.setAlpha(0);
         }
 
         function generateLevel(scene, seed) {
@@ -351,20 +372,17 @@
                 length: levelHeight
             }, () => Array(levelWidth).fill(1));
 
-            // Function to create a room
+
             function createRoom(x, y, width, height, color = normalRoomColor) {
                 for (let i = y; i < y + height; i++) {
                     for (let j = x; j < x + width; j++) {
                         level[i][j] = 0;
-                        // Draw each tile of the room
                         const tile = scene.add.rectangle(j * tileSize, i * tileSize, tileSize, tileSize, color).setOrigin(0);
                         scene.rooms.add(tile);
-                        tile.setAlpha(0); // Set initial opacity to 0
+                        tile.setAlpha(0);
                     }
                 }
-                // Mark walls around the room as exposed
                 markExposedWalls(x, y, width, height);
-                // Store room details
                 rooms.push({ x, y, width, height, color });
             }
 
@@ -372,32 +390,29 @@
                 for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
                     if (level[y][x] !== 0) {
                         level[y][x] = 0;
-                        level[y + 1][x] = 0; // Make the hallway two tiles wide
+                        level[y + 1][x] = 0;
                         const hallway = scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, color).setOrigin(0);
                         scene.rooms.add(hallway);
-                        hallway.setAlpha(0); // Set initial opacity to 0
+                        hallway.setAlpha(0);
                         const hallway2 = scene.add.rectangle(x * tileSize, (y + 1) * tileSize, tileSize, tileSize, color).setOrigin(0);
                         scene.rooms.add(hallway2);
-                        hallway2.setAlpha(0); // Set initial opacity to 0
-                        // Mark walls around the hallway as exposed
+                        hallway2.setAlpha(0);
                         markExposedWalls(x, y, 1, 2);
                     }
                 }
             }
 
-            // Function to create a vertical hallway
             function createVerticalHallway(y1, y2, x, color = normalRoomColor) {
                 for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
                     if (level[y][x] !== 0) {
                         level[y][x] = 0;
-                        level[y][x + 1] = 0; // Make the hallway two tiles wide
+                        level[y][x + 1] = 0;
                         const hallway = scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, color).setOrigin(0);
                         scene.rooms.add(hallway);
-                        hallway.setAlpha(0); // Set initial opacity to 0
+                        hallway.setAlpha(0);
                         const hallway2 = scene.add.rectangle((x + 1) * tileSize, y * tileSize, tileSize, tileSize, color).setOrigin(0);
                         scene.rooms.add(hallway2);
-                        hallway2.setAlpha(0); // Set initial opacity to 0
-                        // Mark walls around the hallway as exposed
+                        hallway2.setAlpha(0);
                         markExposedWalls(x, y, 2, 1);
                     }
                 }
@@ -407,7 +422,7 @@
                 for (let i = y - 1; i <= y + height; i++) {
                     for (let j = x - 1; j <= x + width; j++) {
                         if (i >= 0 && i < levelHeight && j >= 0 && j < levelWidth && level[i][j] === 1) {
-                            level[i][j] = 2; // Mark as exposed wall
+                            level[i][j] = 2;
                         }
                     }
                 }
@@ -418,18 +433,20 @@
             const startY = 1;
             createRoom(startX, startY, 4, 4);
 
-            // Create rooms
             rooms = [{
                 x: startX,
                 y: startY,
                 width: 4,
                 height: 4
             }];
-            for (let i = 0; i < 10; i++) { // Increase the number of rooms
+
+            for (let i = 0; i < 10; i++) {
                 const roomWidth = Math.floor(Math.random() * 5) + 4;
                 const roomHeight = Math.floor(Math.random() * 5) + 4;
-                const roomX = Math.floor(Math.random() * (levelWidth - roomWidth - 1)) + 1; // Ensure room fits within borders
-                const roomY = Math.floor(Math.random() * (levelHeight - roomHeight - 1)) + 1; // Ensure room fits within borders
+
+                // Ensure room fits within borders
+                const roomX = Math.floor(Math.random() * (levelWidth - roomWidth - 1)) + 1;
+                const roomY = Math.floor(Math.random() * (levelHeight - roomHeight - 1)) + 1;
 
                 // Ensure the room does not overlap with existing rooms and has a 2-tile gap
                 let overlap = false;
@@ -458,7 +475,6 @@
                 }
             }
 
-            // Log the number of rooms placed
             console.log(`Number of rooms placed: ${rooms.length}`);
 
             // Designate one room as the exit room, ensuring it is not the starting room
@@ -466,14 +482,14 @@
             do {
                 exitRoom = rooms[Math.floor(Math.random() * rooms.length)];
             } while (exitRoom.x === startX && exitRoom.y === startY);
-            createRoom(exitRoom.x, exitRoom.y, exitRoom.width, exitRoom.height, exitRoomColor); // Dark green color for the exit room
+            createRoom(exitRoom.x, exitRoom.y, exitRoom.width, exitRoom.height, exitRoomColor);
 
             // Add an exit tile in the exit room
             const exitTileX = exitRoom.x + Math.floor(exitRoom.width / 2);
             const exitTileY = exitRoom.y + Math.floor(exitRoom.height / 2);
             const exitTile = scene.add.rectangle(exitTileX * tileSize, exitTileY * tileSize, tileSize, tileSize, exitTileColor).setOrigin(0); // Blue color for the exit tile
             scene.features.add(exitTile);
-            exitTile.setAlpha(0); // Set initial opacity to 0
+            exitTile.setAlpha(0);
 
             // Connect rooms with hallways
             for (let i = 1; i < rooms.length; i++) {
@@ -526,13 +542,13 @@
                         const wall = scene.add.image(x * tileSize, y * tileSize, 'wall').setOrigin(0);
                         scene.physics.add.existing(wall, true);
                         scene.walls.add(wall);
-                        wall.setAlpha(0); // Set initial opacity to 0
+                        wall.setAlpha(0);
                     } else if (level[y][x] === 2) {
                         const wall = scene.add.image(x * tileSize, y * tileSize, 'wall').setOrigin(0);
                         scene.physics.add.existing(wall, true);
                         scene.walls.add(wall);
-                        scene.exposedWalls.add(wall); // Add to exposed walls group
-                        wall.setAlpha(0); // Set initial opacity to 0
+                        scene.exposedWalls.add(wall);
+                        wall.setAlpha(0);
                     }
                 }
             }
@@ -548,7 +564,6 @@
         }
 
         function isConnected(x1, y1, x2, y2) {
-            // Implement a simple BFS to check if two points are connected
             const queue = [{ x: x1, y: y1 }];
             const visited = new Set();
             visited.add(`${x1},${y1}`);

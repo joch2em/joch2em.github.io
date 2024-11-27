@@ -92,9 +92,7 @@
         <input type="checkbox" id="revealMinimap" name="revealMinimap"><br>
         <button type="submit" style="color: #ffffff;">Save</button>
     </form>
-    <!-- <a href="index.html"> -->
     <button id="back-button" style="margin-top: 20px; background: #6c757d; color: #ffffff;">Start Game</button>
-    <!-- </a> -->
     <script>
         document.addEventListener('DOMContentLoaded', (event) => {
             const form = document.getElementById('settings-form');
@@ -107,7 +105,6 @@
             const deleteSeedButton = document.getElementById('delete-seed');
             const revealMinimapCheckbox = document.getElementById('revealMinimap');
 
-            // Load saved settings
             upKeyButton.textContent = localStorage.getItem('rogueLight-upKey') || 'ArrowUp';
             downKeyButton.textContent = localStorage.getItem('rogueLight-downKey') || 'ArrowDown';
             leftKeyButton.textContent = localStorage.getItem('rogueLight-leftKey') || 'ArrowLeft';
