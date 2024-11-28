@@ -77,3 +77,21 @@ canvas {
     color: inherit;
     padding: 0;
 }
+
+.health-bar-container {
+    position: absolute;
+    bottom: 10px;
+    /* Adjusted to be just under the minimap */
+    right: 10px;
+    width: 200px;
+    height: 20px;
+    background-color: rgba(170, 5, 5, 0.8);
+    border: 1px solid #000;
+}
+
+.health-bar {
+    height: 100%;
+    background-color: #397e12;
+    width: 100%;
+    /* Initial width set to 100% */
+}
