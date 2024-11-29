@@ -549,12 +549,12 @@ function generateLevel(scene, seed) {
 
         // Create L-shaped hallways
         if (prevCenterX !== currCenterX && prevCenterY !== currCenterY) {
-            createVerticalHallway(prevCenterY, currCenterY, prevCenterX, 0x797979);
+            createVerticalHallway(prevCenterY, currCenterY, prevCenterX, 0x1f1f1f);
             createHorizontalHallway(prevCenterX, currCenterX, currCenterY, 0x1f1f1f);
         } else if (prevCenterX !== currCenterX) {
-            createHorizontalHallway(prevCenterX, currCenterX, prevCenterY, 0x6c8a58);
+            createHorizontalHallway(prevCenterX, currCenterX, prevCenterY, 0x1f1f1f);
         } else if (prevCenterY !== currCenterY) {
-            createVerticalHallway(prevCenterY, currCenterY, prevCenterX, 0x6c8a58);
+            createVerticalHallway(prevCenterY, currCenterY, prevCenterX, 0x1f1f1f);
         }
     }
 
