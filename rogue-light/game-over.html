@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Over</title>
+    <style>
+        html {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .game-over-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #000;
+            color: #fff;
+            text-align: center;
+        }
+
+        .game-over-container h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .game-over-container p {
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+
+        .game-over-container button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .game-over-container button:hover {
+            background-color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-over-container">
+        <h1>Game Over</h1>
+        <p id="score-display">Score: 0</p>
+        <p id="layers-survived-display">Layers Survived: 0</p>
+        <button onclick="window.location.href='index.html'">Back to Main Menu</button>
+        <button onclick="window.location.href='dungeon/layer_1'">Try Again</button>
+    </div>
+    <script>
+        // Extract query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const score = urlParams.get('score');
+        const layersSurvived = urlParams.get('layersSurvived');
+
+        // Display score and layers survived
+        document.getElementById('score-display').innerText = `Score: ${score}`;
+        document.getElementById('layers-survived-display').innerText = `Layers Survived: ${layersSurvived}`;
+    </script>
+</body>
+
+</html>

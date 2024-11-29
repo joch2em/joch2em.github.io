@@ -28,16 +28,16 @@ function getNeighbors(node, level) {
     const { x, y } = node;
     const neighbors = [];
 
-    if (level[y - 1] && level[y - 1][x] === 0) neighbors.push({ x, y: y - 1 });
-    if (level[y + 1] && level[y + 1][x] === 0) neighbors.push({ x, y: y + 1 });
-    if (level[y][x - 1] === 0) neighbors.push({ x: x - 1, y });
-    if (level[y][x + 1] === 0) neighbors.push({ x: x + 1, y });
+    if (level[Math.floor(y) - 1] && level[Math.floor(y) - 1][Math.floor(x)] === 0) neighbors.push({ x, y: y - 1 });
+    if (level[Math.floor(y) + 1] && level[Math.floor(y) + 1][Math.floor(x)] === 0) neighbors.push({ x, y: y + 1 });
+    if (level[Math.floor(y)][Math.floor(x) - 1] === 0) neighbors.push({ x: x - 1, y });
+    if (level[Math.floor(y)][Math.floor(x) + 1] === 0) neighbors.push({ x: x + 1, y });
 
-    // Add diagonal neighbors
-    if (level[y - 1] && level[y - 1][x - 1] === 0) neighbors.push({ x: x - 1, y: y - 1 });
-    if (level[y - 1] && level[y - 1][x + 1] === 0) neighbors.push({ x: x + 1, y: y - 1 });
-    if (level[y + 1] && level[y + 1][x - 1] === 0) neighbors.push({ x: x - 1, y: y + 1 });
-    if (level[y + 1] && level[y + 1][x + 1] === 0) neighbors.push({ x: x + 1, y: y + 1 });
+    // Add diagonal neighbors only if both adjacent tiles are walkable
+    // if (level[Math.floor(y) - 1] && level[Math.floor(y) - 1][Math.floor(x) - 1] === 0 && level[Math.floor(y) - 1][Math.floor(x)] === 0 && level[Math.floor(y)][Math.floor(x) - 1] === 0) neighbors.push({ x: x - 1, y: y - 1 });
+    // if (level[Math.floor(y) - 1] && level[Math.floor(y) - 1][Math.floor(x) + 1] === 0 && level[Math.floor(y) - 1][Math.floor(x)] === 0 && level[Math.floor(y)][Math.floor(x) + 1] === 0) neighbors.push({ x: x + 1, y: y - 1 });
+    // if (level[Math.floor(y) + 1] && level[Math.floor(y) + 1][Math.floor(x) - 1] === 0 && level[Math.floor(y) + 1][Math.floor(x)] === 0 && level[Math.floor(y)][Math.floor(x) - 1] === 0) neighbors.push({ x: x - 1, y: y + 1 });
+    // if (level[Math.floor(y) + 1] && level[Math.floor(y) + 1][Math.floor(x) + 1] === 0 && level[Math.floor(y) + 1][Math.floor(x)] === 0 && level[Math.floor(y)][Math.floor(x) + 1] === 0) neighbors.push({ x: x + 1, y: y + 1 });
 
     return neighbors;
 }
@@ -65,18 +65,19 @@ function isPathClear(x1, y1, x2, y2, level) {
     return true;
 }
 
-function smoothPath(path, level) {
-    if (path.length < 3) return path;
-    const smoothedPath = [path[0]];
-    let lastPoint = path[0];
-    for (let i = 1; i < path.length; i++) {
-        if (!isPathClear(lastPoint.x, lastPoint.y, path[i].x, path[i].y, level)) {
-            smoothedPath.push(path[i - 1]);
-            lastPoint = path[i - 1];
-        }
-    }
-    smoothedPath.push(path[path.length - 1]);
-    return smoothedPath;
-}
+// function smoothPath(path, level) {
+//     if (path.length < 3) return path;
+//     const smoothedPath = [path[0]];
+//     let lastPoint = path[0];
+//     for (let i = 1; i < path.length; i++) {
+//         if (!isPathClear(lastPoint.x, lastPoint.y, path[i].x, path[i].y, level)) {
+//             smoothedPath.push(path[i - 1]);
+//             lastPoint = path[i - 1];
+//         }
+//     }
+//     smoothedPath.push(path[path.length - 1]);
+//     return smoothedPath;
+// }
 
-export { bfsPathfinding, smoothPath, isPathClear };
+// export { bfsPathfinding, smoothPath, isPathClear };
+export { bfsPathfinding, isPathClear };

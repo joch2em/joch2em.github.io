@@ -1,4 +1,5 @@
-import { bfsPathfinding, smoothPath, isPathClear } from '../../resources/js/pathfinding.js';
+// import { bfsPathfinding, smoothPath, isPathClear } from '../../resources/js/pathfinding.js';
+import { bfsPathfinding } from '../../resources/js/pathfinding.js';
 
 // Configuration variables
 const tileSize = 40;                // tile size in pixels
@@ -10,6 +11,7 @@ const exitTileColor = 0x0000ff;     // Exit tile color
 let playerSpeed = 260;              // Player speed 
 let enemySpeed = 200;               // Enemy speed
 const normalRoomColor = 0xbdb356;   // Normal room color
+const enemyOffset = 1;              // Offset for enemies that get stuck
 const revealMinimap = JSON.parse(localStorage.getItem('rogueLight-revealMinimap')) || false; // Boolean to control minimap visibility
 let seed = localStorage.getItem('rogueLight-seed') || Math.random().toString(36).substr(2, 9); // Global variable for the seed
 
@@ -62,7 +64,9 @@ class Enemy {
         this.pathIndex = 0;
         this.debugGraphics = scene.add.graphics(); // Add graphics for debugging
         this.seen = false; // Add seen property
-        this.stillFrameCounter = 0; // Add a counter to track frames without movement
+        this.previousPosition = { x: Math.floor(this.sprite.x / tileSize), y: Math.floor(this.sprite.y / tileSize) }; // Add previous position
+        this.enemyFrameCounter = 0; // Add a counter to track frames for position check
+        this.stuckCounter = 0; // Add a counter to track how long the enemy has been stuck
     }
 
     recalculatePath(playerX, playerY) {
@@ -70,8 +74,7 @@ class Enemy {
         const startY = Math.floor(this.sprite.y / tileSize);
         const endX = Math.floor(playerX / tileSize);
         const endY = Math.floor(playerY / tileSize);
-        const path = bfsPathfinding(startX, startY, endX, endY, level);
-        this.path = smoothPath(path, level);
+        this.path = bfsPathfinding(startX, startY, endX, endY, level);
         this.pathIndex = 0;
 
         // Skip the first node if the enemy is already close to it
@@ -109,32 +112,85 @@ class Enemy {
         if (this.path.length === 0 || this.pathIndex >= this.path.length) {
             this.recalculatePath(playerX, playerY);
         }
+        let dx = 0, dy = 0; // Define dx and dy variables
         if (this.path.length > 0 && this.pathIndex < this.path.length) {
             const nextPoint = this.path[this.pathIndex];
             const nextX = nextPoint.x * tileSize + tileSize / 2 - this.sprite.width / 2;
             const nextY = nextPoint.y * tileSize + tileSize / 2 - this.sprite.height / 2;
-            const dx = nextX - this.sprite.x;
-            const dy = nextY - this.sprite.y;
+            dx = nextX - this.sprite.x;
+            dy = nextY - this.sprite.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < 4) {
+            if (distance < 2) {
                 this.pathIndex++;
-                this.stillFrameCounter = 0; // Reset counter if the enemy moves
             } else {
                 this.sprite.body.setVelocity(dx / distance * enemySpeed, dy / distance * enemySpeed);
-                this.stillFrameCounter++;
-                if (this.stillFrameCounter > 60) { // Recalculate path if the enemy has not moved for more than 60 frames
-                    this.recalculatePath(playerX, playerY);
-                    this.stillFrameCounter = 0;
-                }
             }
         } else {
             this.sprite.body.setVelocity(0, 0);
-            this.stillFrameCounter++;
-            if (this.stillFrameCounter > 60) { // Recalculate path if the enemy has not moved for more than 60 frames
-                this.recalculatePath(playerX, playerY);
-                this.stillFrameCounter = 0;
-            }
         }
+        if (this.enemyFrameCounter % 20 === 0) {
+            const currentX = Math.floor(this.sprite.x / tileSize);
+            const currentY = Math.floor(this.sprite.y / tileSize);
+            if (currentX === this.previousPosition.x && currentY === this.previousPosition.y) {
+                this.stuckCounter++;
+                console.log(`Enemy stuck at (${Math.floor(this.sprite.x)}, ${Math.floor(this.sprite.y)}), moving away from the closest wall`);
+                const distances = {
+                    left: this.getDistanceToWall(currentX, currentY, -1, 0),
+                    right: this.getDistanceToWall(currentX, currentY, 1, 0),
+                    up: this.getDistanceToWall(currentX, currentY, 0, -1),
+                    down: this.getDistanceToWall(currentX, currentY, 0, 1),
+                    upLeft: this.getDistanceToWall(currentX, currentY, -1, -1),
+                    upRight: this.getDistanceToWall(currentX, currentY, 1, -1),
+                    downLeft: this.getDistanceToWall(currentX, currentY, -1, 1),
+                    downRight: this.getDistanceToWall(currentX, currentY, 1, 1)
+                };
+                const closestDirection = Object.keys(distances).reduce((a, b) => distances[a] < distances[b] ? a : b);
+                switch (closestDirection) {
+                    case 'left':
+                        this.sprite.x += enemyOffset;
+                        break;
+                    case 'right':
+                        this.sprite.x -= enemyOffset;
+                        break;
+                    case 'up':
+                        this.sprite.y += enemyOffset;
+                        break;
+                    case 'down':
+                        this.sprite.y -= enemyOffset;
+                        break;
+                    case 'upLeft':
+                        this.sprite.x += enemyOffset;
+                        this.sprite.y += enemyOffset;
+                        break;
+                    case 'upRight':
+                        this.sprite.x -= enemyOffset;
+                        this.sprite.y += enemyOffset;
+                        break;
+                    case 'downLeft':
+                        this.sprite.x += enemyOffset;
+                        this.sprite.y -= enemyOffset;
+                        break;
+                    case 'downRight':
+                        this.sprite.x -= enemyOffset
+                        this.sprite.y -= enemyOffset;
+                        break;
+                }
+                // this.recalculatePath(playerX, playerY);
+                this.stuckCounter = 0;
+            } else {
+                this.stuckCounter = 0;
+            }
+            this.previousPosition = { x: currentX, y: currentY };
+        }
+        this.enemyFrameCounter++;
+    }
+
+    getDistanceToWall(x, y, dx, dy) {
+        let distance = 0;
+        while (level[y + dy * distance] && level[y + dy * distance][x + dx * distance] === 0) {
+            distance++;
+        }
+        return distance;
     }
 }
 
@@ -213,15 +269,25 @@ function create() {
 }
 
 function playerHit(player, enemy) {
-    if (this.frameCounter % 5 === 0) {
-        player.health -= 1; // Decrease player health by 1
-    }
+    player.health -= 1; // Decrease player health by 1
     if (player.health <= 0) {
         player.health = 0;
-        // Handle player death (e.g., restart level, show game over screen)
+        // Handle player death (e.g., redirect to game over screen)
         console.log('Player is dead');
-        window.location.reload(); // Reload the page to restart the game
+        const score = calculateScore(); // Replace with actual score calculation
+        const layersSurvived = calculateLayersSurvived(); // Replace with actual layers survived calculation
+        window.location.href = `../../game-over.html?score=${score}&layersSurvived=${layersSurvived}`; // Redirect to game over screen with query parameters
     }
+}
+
+function calculateScore() {
+    // Implement score calculation logic here
+    return "W.I.P."; // Placeholder value
+}
+
+function calculateLayersSurvived() {
+    // Implement layers survived calculation logic here
+    return "W.I.P."; // Placeholder value
 }
 
 function update() {
