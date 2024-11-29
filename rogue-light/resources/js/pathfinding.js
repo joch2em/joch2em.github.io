@@ -7,7 +7,7 @@ function bfsPathfinding(startX, startY, endX, endY, level) {
     while (queue.length > 0) {
         const { x, y, path } = queue.shift();
 
-        if (x === endX && y === endY) {
+        if (Math.floor(x) === endX && Math.floor(y) === endY) {
             return path.concat({ x, y });
         }
 
@@ -33,23 +33,50 @@ function getNeighbors(node, level) {
     if (level[y][x - 1] === 0) neighbors.push({ x: x - 1, y });
     if (level[y][x + 1] === 0) neighbors.push({ x: x + 1, y });
 
+    // Add diagonal neighbors
+    if (level[y - 1] && level[y - 1][x - 1] === 0) neighbors.push({ x: x - 1, y: y - 1 });
+    if (level[y - 1] && level[y - 1][x + 1] === 0) neighbors.push({ x: x + 1, y: y - 1 });
+    if (level[y + 1] && level[y + 1][x - 1] === 0) neighbors.push({ x: x - 1, y: y + 1 });
+    if (level[y + 1] && level[y + 1][x + 1] === 0) neighbors.push({ x: x + 1, y: y + 1 });
+
     return neighbors;
 }
 
-function smoothPath(path) {
+function isPathClear(x1, y1, x2, y2, level) {
+    const dx = Math.abs(x2 - x1);
+    const dy = Math.abs(y2 - y1);
+    const sx = (x1 < x2) ? 1 : -1;
+    const sy = (y1 < y2) ? 1 : -1;
+    let err = dx - dy;
+
+    while (true) {
+        if (level[y1][x1] !== 0) return false;
+        if (x1 === x2 && y1 === y2) break;
+        const e2 = err * 2;
+        if (e2 > -dy) {
+            err -= dy;
+            x1 += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            y1 += sy;
+        }
+    }
+    return true;
+}
+
+function smoothPath(path, level) {
     if (path.length < 3) return path;
     const smoothedPath = [path[0]];
-    for (let i = 1; i < path.length - 1; i++) {
-        const prev = path[i - 1];
-        const curr = path[i];
-        const next = path[i + 1];
-        if ((prev.x === next.x && curr.x === next.x) || (prev.y === next.y && curr.y === next.y)) {
-            continue;
+    let lastPoint = path[0];
+    for (let i = 1; i < path.length; i++) {
+        if (!isPathClear(lastPoint.x, lastPoint.y, path[i].x, path[i].y, level)) {
+            smoothedPath.push(path[i - 1]);
+            lastPoint = path[i - 1];
         }
-        smoothedPath.push(curr);
     }
     smoothedPath.push(path[path.length - 1]);
     return smoothedPath;
 }
 
-export { bfsPathfinding, smoothPath };
+export { bfsPathfinding, smoothPath, isPathClear };
