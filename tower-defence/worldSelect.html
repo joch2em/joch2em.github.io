@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Select</title>
+    <link rel="stylesheet" href="resource/css/style.css">
+</head>
+
+<body>
+    <div class="world-select">
+        <h1>Select a World</h1>
+        <div class="world" onclick="selectWorld('1')">
+            <img src="resource/images/world1.jpg" alt="World 1">
+            <div class="world-details">
+                <h2>World 1</h2>
+                <p>Description of World 1. This is a beginner level.</p>
+                <div class="world-difficulty">
+                    <div class="difficulty-bar easy">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="world" onclick="selectWorld('2')">
+            <img src="resource/images/world2.jpg" alt="World 2">
+            <div class="world-details">
+                <h2>World 2</h2>
+                <p>Description of World 2. This is an intermediate level.</p>
+                <div class="world-difficulty">
+                    <div class="difficulty-bar medium">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="world" onclick="selectWorld('3')">
+            <img src="resource/images/world3.jpg" alt="World 3">
+            <div class="world-details">
+                <h2>World 3</h2>
+                <p>Description of World 3. This is an advanced level.</p>
+                <div class="world-difficulty">
+                    <div class="difficulty-bar hard">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a href="index.html">Back to Main Menu</a>
+    </div>
+    <script>
+        function selectWorld(world) {
+            switch (world) {
+                case '1':
+                    window.location.href = 'worlds/world1.html';
+                    break;
+                case '2':
+                    //    window.location.href = 'worlds/world2.html';
+                    break;
+                case '3':
+                    //    window.location.href = 'worlds/world3.html';
+                    break;
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,43 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #333;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    margin: 0;
+}
+
+#gameGrid {
+    width: 1500px;
+    height: 750px;
+}
+
+.tile {
+    background-color: #777;
+    border: 1px solid #555;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.1s ease-out;
+}
+
+.tile:hover {
+    transform: scale(1.05);
+}
+
+.path {
+    background-color: #fff;
+}
+
+.selected-path {
+    background-color: rgb(233, 203, 68);
+}
+
+.crossroad {
+    background-color: rgb(187, 163, 54);
+}
+
+.circle {
+    transition: all 1s;
+}

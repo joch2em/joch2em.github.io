@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tower Defence</title>
+    <link rel="stylesheet" href="resource/css/style.css">
+</head>
+
+<body>
+    <div class="menu">
+        <h1>Tower Defence</h1>
+        <button onclick="startGame()">Start Game</button>
+        <button onclick="showOptions()">Options</button>
+        <button onclick="exitGame()">Exit</button>
+    </div>
+    <script>
+        function startGame() {
+            window.location.href = 'worldSelect.html';
+        }
+        function showOptions() {
+            window.location.href = 'options.html';
+        }
+        function exitGame() {
+            window.location.href = '../';
+        }
+    </script>
+</body>
+
+</html>

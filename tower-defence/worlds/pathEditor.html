@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Path Editor</title>
+    <script src="../resource/js/main.js" defer></script>
+    <script src="../resource/js/pathSelector.js" defer></script>
+    <link rel="stylesheet" href="../resource/css/main.css">
+    <style>
+        #savePathButton,
+        #loadPathButton,
+        #resetButton,
+        #testPathButton {
+            margin-top: 20px;
+            margin-left: 50px;
+        }
+
+        #pathInput {
+            margin-top: 20px;
+            margin-left: 50px;
+            width: 150px;
+        }
+
+        .settings {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .circle {
+            width: 20px;
+            height: 20px;
+            background-color: red;
+            border-radius: 50%;
+            position: absolute;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="gameGrid">
+        <!-- Grid items will be injected here by JavaScript -->
+    </div>
+    <div class="settings">
+        <button id="savePathButton">Save Path</button>
+        <button id="loadPathButton">Load Path</button>
+        <button id="resetButton">Reset</button>
+        <button id="testPathButton">Test Path</button>
+        <input type="text" id="pathInput" placeholder="Enter path JSON">
+    </div>
+</body>
+
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        document.getElementById('savePathButton').addEventListener('click', () => {
+            const path = getSelectedPath();
+            console.log(JSON.stringify(path, null, 2));
+            localStorage.setItem('TD-customPath', JSON.stringify(path));
+        });
+
+        document.getElementById('loadPathButton').addEventListener('click', () => {
+            const pathInput = document.getElementById('pathInput').value;
+            let path = localStorage.getItem('TD-customPath');
+            if (!path && !pathInput) {
+                alert('No path found in local storage or input field.');
+                return;
+            }
+            if (pathInput) {
+                try {
+                    path = JSON.parse(pathInput);
+                } catch (e) {
+                    alert('Invalid JSON in input field.');
+                    return;
+                }
+            } else {
+                path = JSON.parse(path);
+            }
+            loadPath(path);
+        });
+
+        document.getElementById('resetButton').addEventListener('click', () => {
+            resetPath();
+        });
+
+        document.getElementById('testPathButton').addEventListener('click', () => {
+            testPath();
+        });
+    });
+
+    function loadPath(path) {
+        const gridContainer = document.getElementById('gameGrid');
+        selectedPath = path; // Update the selectedPath array
+        path.forEach(coord => {
+            const index = coord.y * 20 + coord.x;
+            const tile = gridContainer.children[index];
+            tile.classList.add('selected-path');
+        });
+    }
+
+    function resetPath() {
+        const gridContainer = document.getElementById('gameGrid');
+        selectedPath = []; // Clear the selectedPath array
+        Array.from(gridContainer.children).forEach(tile => {
+            tile.classList.remove('selected-path');
+            tile.classList.remove('crossroad')
+        });
+    }
+
+    function testPath() {
+        const path = getSelectedPath();
+        if (path.length === 0) {
+            alert('No path to test.');
+            return;
+        }
+
+        const circle = document.createElement('div');
+        circle.classList.add('circle');
+        document.body.appendChild(circle);
+
+        let index = 0;
+        function moveCircle() {
+            if (index >= path.length) {
+                return;
+            }
+            const coord = path[index];
+            const tile = document.getElementById('gameGrid').children[coord.y * 20 + coord.x];
+            const rect = tile.getBoundingClientRect();
+            circle.style.left = `${rect.left + window.scrollX + rect.width / 2 - circle.offsetWidth / 2}px`;
+            circle.style.top = `${rect.top + window.scrollY + rect.height / 2 - circle.offsetHeight / 2}px`;
+            index++;
+            setTimeout(moveCircle, 500); // Adjust the speed as needed
+        }
+        moveCircle();
+    }
+</script>
+
+</html>

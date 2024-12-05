@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tower Defence Game Options">
+    <title>Options</title>
+    <link rel="stylesheet" href="resource/css/style.css">
+</head>
+
+<body>
+    <div class="options">
+        <h1>Options</h1>
+        <label>
+            <input type="checkbox" id="sound" /> Enable Sound
+        </label>
+        <label>
+            <input type="checkbox" id="cheats" /> Enable Cheats
+        </label>
+        <button id="saveButton" onclick="saveSettings()">Save Settings</button>
+        <a href="worldSelect.html">World Select</a>
+        <a href="index.html">Back to Main Menu</a>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const soundEnabled = localStorage.getItem('TD-soundEnabled') === 'true';
+            const cheatsEnabled = localStorage.getItem('TD-cheatsEnabled') === 'true';
+            document.getElementById('cheats').checked = cheatsEnabled;
+            document.getElementById('sound').checked = soundEnabled;
+        });
+
+        function saveSettings() {
+            const soundEnabled = document.getElementById('sound').checked;
+            const cheatsEnabled = document.getElementById('cheats').checked;
+            localStorage.setItem('TD-soundEnabled', soundEnabled);
+            localStorage.setItem('TD-cheatsEnabled', cheatsEnabled);
+
+            const saveButton = document.getElementById('saveButton');
+            saveButton.classList.remove('notSaving');
+            saveButton.classList.add('saved');
+            setTimeout(() => {
+                saveButton.classList.add('notSaving');
+                saveButton.classList.remove('saved');
+            }, 500);
+        }
+    </script>
+</body>
+
+</html>
