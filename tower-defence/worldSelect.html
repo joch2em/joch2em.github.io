@@ -62,8 +62,16 @@
                 </div>
             </div>
         </div>
+        <div class="world" onclick="selectCustomMap()">
+            <img src="resource/images/customMap.jpg" alt="Custom Map">
+            <div class="world-details">
+                <h2>Custom Map</h2>
+                <p>Select a JSON file to generate a custom map.</p>
+            </div>
+        </div>
         <a href="index.html">Back to Main Menu</a>
     </div>
+    <input type="file" id="fileInput" style="display: none;" accept=".json" onchange="loadCustomMap(event)">
     <script>
         function selectWorld(world) {
             switch (world) {
@@ -76,6 +84,27 @@
                 case '3':
                     //    window.location.href = 'worlds/world3.html';
                     break;
+            }
+        }
+
+        function selectCustomMap() {
+            document.getElementById('fileInput').click();
+        }
+
+        function loadCustomMap(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const mapData = JSON.parse(e.target.result);
+                        localStorage.setItem('TD-customMap', JSON.stringify(mapData));
+                        window.location.href = 'worlds/customMap.html';
+                    } catch (error) {
+                        alert('Invalid JSON file.');
+                    }
+                };
+                reader.readAsText(file);
             }
         }
     </script>
