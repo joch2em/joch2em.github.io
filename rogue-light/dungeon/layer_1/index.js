@@ -14,6 +14,7 @@ const normalRoomColor = 0xbdb356;   // Normal room color
 const enemyOffset = 1;              // Offset for enemies that get stuck
 const revealMinimap = JSON.parse(localStorage.getItem('rogueLight-revealMinimap')) || false; // Boolean to control minimap visibility
 let seed = localStorage.getItem('rogueLight-seed') || Math.random().toString(36).substr(2, 9); // Global variable for the seed
+const startWithSword = JSON.parse(localStorage.getItem('rogueLight-startWithSword')) || false; // Boolean to control starting with a sword
 
 const playerSpeedElement = document.getElementById('playerSpeed');
 const debugMode = JSON.parse(localStorage.getItem('rogueLight-debugMode')) || false; // Enable or disable debug mode
@@ -194,6 +195,43 @@ class Enemy {
     }
 }
 
+class Weapon {
+    constructor(scene, x, y, type) {
+        this.scene = scene;
+        this.type = type;
+        this.sprite = scene.add.rectangle(x * tileSize, y * tileSize, tileSize / 2, tileSize, 0x808080).setOrigin(0.5); // Grey color for weapon, rectangle shape
+        scene.physics.add.existing(this.sprite);
+        this.sprite.body.setCollideWorldBounds(true);
+        this.angle = 0; // Initialize angle
+    }
+
+    update(player, pointerX, pointerY) {
+        // Position the weapon in front of the player and rotate towards the pointer coordinates
+        this.angle = Phaser.Math.Angle.Between(player.x, player.y, pointerX, pointerY);
+        this.sprite.x = player.x + Math.cos(this.angle) * tileSize;
+        this.sprite.y = player.y + Math.sin(this.angle) * tileSize;
+        this.sprite.rotation = this.angle;
+    }
+
+    attack() {
+        const attackRange = tileSize * 1.5; // Define the attack range
+        const attackAngle = this.angle;
+        const attackX = this.sprite.x + Math.cos(attackAngle) * attackRange;
+        const attackY = this.sprite.y + Math.sin(attackAngle) * attackRange;
+
+        // Check for enemies within the attack range
+        this.scene.enemies = this.scene.enemies.filter(enemy => {
+            const distance = Phaser.Math.Distance.Between(attackX, attackY, enemy.sprite.x, enemy.sprite.y);
+            if (distance < tileSize) {
+                enemy.sprite.destroy(); // Destroy the enemy if within range
+                console.log('Enemy hit!');
+                return false; // Remove the enemy from the array
+            }
+            return true; // Keep the enemy in the array
+        });
+    }
+}
+
 export { Enemy };
 
 function create() {
@@ -215,11 +253,21 @@ function create() {
     this.player.body.setCollideWorldBounds(true);
     this.player.health = playerHealth; // Initialize player health
 
+    // Check if the player should start with a sword
+    if (startWithSword) {
+        this.weapon = new Weapon(this, playerPosition.x / tileSize, playerPosition.y / tileSize, 'melee');
+    }
+
     this.cursors = this.input.keyboard.createCursorKeys();
 
     this.physics.add.collider(this.player, this.walls);
     this.physics.add.collider(this.enemyGroup, this.walls); // Add collision between enemies and walls
     this.physics.add.overlap(this.player, this.enemyGroup, playerHit, null, this); // Add overlap detection
+    this.weapon = null; // Initialize weapon as null
+    this.physics.add.overlap(this.player, this.features, (player, feature) => {
+        console.log('Overlap detected');
+        pickupWeapon.call(this, player, feature);
+    }, null, this); // Add overlap detection for weapon pickup with logging
 
     // Set up the camera to follow the player
     this.cameras.main.setBounds(0, 0, levelWidth * tileSize, levelHeight * tileSize);
@@ -266,6 +314,25 @@ function create() {
     }
 
     document.getElementById('seed-display').innerText = `Seed: ${seedValue}`;
+
+    this.input.on('pointerdown', () => {
+        if (this.weapon) {
+            this.weapon.attack(); // Call the attack function when the pointer is pressed
+        }
+    });
+
+}
+
+function pickupWeapon(player, feature) {
+    if (feature.fillColor === 0xffd700) { // Check if the feature is a chest
+        if (this.weapon) {
+            console.log('Player already has a weapon');
+            return; // Do nothing if the player already has a weapon
+        }
+        this.weapon = new Weapon(this, player.x / tileSize, player.y / tileSize, 'melee');
+        feature.destroy(); // Remove the chest from the map
+        console.log('Player picked up a weapon');
+    }
 }
 
 function playerHit(player, enemy) {
@@ -287,7 +354,7 @@ function calculateScore() {
 
 function calculateLayersSurvived() {
     // Implement layers survived calculation logic here
-    return "W.I.P."; // Placeholder value
+    return "1"; // Placeholder value
 }
 
 function update() {
@@ -315,9 +382,21 @@ function update() {
         this.player.body.setVelocityY(playerSpeed);
     }
 
-    this.enemies.forEach(enemy => {
-        enemy.update(this.player.x, this.player.y);
+    // Filter out destroyed enemies before updating them
+    this.enemies = this.enemies.filter(enemy => {
+        if (enemy.sprite.active) {
+            enemy.update(this.player.x, this.player.y);
+            return true;
+        }
+        return false;
     });
+
+    if (this.weapon) {
+        const pointer = this.input.activePointer;
+        const pointerWorldX = pointer.x + this.cameras.main.scrollX;
+        const pointerWorldY = pointer.y + this.cameras.main.scrollY;
+        this.weapon.update(this.player, pointerWorldX, pointerWorldY); // Update weapon position and rotation if equipped
+    }
 
     // Only update the FoV every 5 frames
     if (this.frameCounter % 5 === 0) {
@@ -430,11 +509,6 @@ function updateMinimap() {
     minimapContext.fillRect(Math.floor(this.player.x / tileSize), Math.floor(this.player.y / tileSize), 1, 1);
 }
 
-function isTransparent(x, y) {
-    const tile = level[y] && level[y][x];
-    return tile === 0;
-}
-
 const features = ['chest', 'enemies', 'trap'];
 
 function addFeature(scene, feature, x, y) {
@@ -443,6 +517,7 @@ function addFeature(scene, feature, x, y) {
         case 'chest':
             // Mockup for adding a chest
             featureSprite = scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, 0xffd700).setOrigin(0); // Gold color for chest
+            scene.physics.add.existing(featureSprite); // Add physics body to the chest
             break;
         case 'enemies':
             // Store enemy spawn location instead of creating enemy immediately
@@ -451,11 +526,12 @@ function addFeature(scene, feature, x, y) {
         case 'trap':
             // Mockup for adding a trap
             featureSprite = scene.add.rectangle(x * tileSize, y * tileSize, tileSize, tileSize, 0xcfcfcf).setOrigin(0); // grey color for trap
+            scene.physics.add.existing(featureSprite); // Add physics body to the trap
             break;
     }
     if (featureSprite) {
         scene.features.add(featureSprite);
-        featureSprite.setAlpha(0);
+        featureSprite.setAlpha(0); // Ensure the feature is visible for testing
     }
 }
 
@@ -532,6 +608,7 @@ function generateLevel(scene, seed) {
 
     // Ensure the exit room is created
     let exitRoomCreated = false;
+    let chestRoomCreated = false; // Ensure at least one chest room is created
 
     // Create rooms
     for (let i = 0; i < 10; i++) {
@@ -573,6 +650,9 @@ function generateLevel(scene, seed) {
                     feature = 'chest';
                 }
                 addFeature(scene, feature, roomX + Math.floor(roomWidth / 2), roomY + Math.floor(roomHeight / 2));
+                if (feature === 'chest') {
+                    chestRoomCreated = true;
+                }
             }
 
             // Check if this room can be the exit room
@@ -599,9 +679,55 @@ function generateLevel(scene, seed) {
         scene.features.add(exitTile);
         exitTile.setAlpha(0);
         addFeature(scene, 'enemies', exitTileX, exitTileY); // Ensure the exit room contains an enemy
+        exitRoomCreated = true;
     }
 
-    console.log(`Number of rooms placed: ${rooms.length}`);
+    // If no chest room was created and the last room is not the exit room, designate the last room as the chest room
+    if (!chestRoomCreated && !exitRoomCreated) {
+        const lastRoom = rooms[rooms.length - 1];
+        addFeature(scene, 'chest', lastRoom.x + Math.floor(lastRoom.width / 2), lastRoom.y + Math.floor(lastRoom.height / 2));
+        // } else if (!chestRoomCreated) {
+        //     // Find a room that is not the exit room to designate as the chest room
+        //     for (let i = rooms.length - 2; i >= 0; i--) {
+        //         const room = rooms[i];
+        //         if (room.x !== lastRoom.x || room.y !== lastRoom.y) {
+        //             addFeature(scene, 'chest', room.x + Math.floor(room.width / 2), room.y + Math.floor(room.height / 2));
+        //             break;
+        //         }
+        //     }
+    }
+
+    // If no chest room was created, add an additional room for the chest
+    if (!chestRoomCreated) {
+        let additionalRoomCreated = false;
+        while (!additionalRoomCreated) {
+            const roomWidth = Math.floor(Math.random() * 5) + 4;
+            const roomHeight = Math.floor(Math.random() * 5) + 4;
+            const roomX = Math.floor(Math.random() * (levelWidth - roomWidth - 1)) + 1;
+            const roomY = Math.floor(Math.random() * (levelHeight - roomHeight - 1)) + 1;
+
+            let overlap = false;
+            for (const room of rooms) {
+                if (roomX < room.x + room.width + 2 && roomX + roomWidth + 2 > room.x &&
+                    roomY < room.y + room.height + 2 && roomY + roomHeight + 2 > room.y) {
+                    overlap = true;
+                    break;
+                }
+            }
+
+            if (!overlap) {
+                createRoom(roomX, roomY, roomWidth, roomHeight);
+                rooms.push({ x: roomX, y: roomY, width: roomWidth, height: roomHeight });
+                addFeature(scene, 'chest', roomX + Math.floor(roomWidth / 2), roomY + Math.floor(roomHeight / 2));
+                additionalRoomCreated = true;
+            }
+        }
+    }
+
+    if (debugMode) {
+        console.log('Rooms:', rooms);
+        console.log('Enemy spawn locations:', enemySpawnLocations);
+    }
 
     // Connect rooms with hallways
     for (let i = 1; i < rooms.length; i++) {
