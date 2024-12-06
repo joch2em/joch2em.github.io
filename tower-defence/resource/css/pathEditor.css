@@ -136,10 +136,6 @@
     justify-content: center;
 }
 
-.water {
-    background-color: blue;
-}
-
 #selectedToolContainer {
     display: flex;
     position: absolute;

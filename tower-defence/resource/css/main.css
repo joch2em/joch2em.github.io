@@ -39,6 +39,10 @@ body {
     background-color: rgb(187, 163, 54);
 }
 
+.water {
+    background-color: blue;
+}
+
 .circle {
     transition: all 0.5s;
 }
