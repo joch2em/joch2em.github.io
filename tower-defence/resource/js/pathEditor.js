@@ -150,7 +150,7 @@ function resetPath() {
 }
 
 function testPath() {
-    moveSpeed = 2; // Lower is faster
+    moveSpeed = 0.5; // Lower is faster
     const path = getSelectedPath();
     if (path.length === 0) {
         alert('No path to test.');
