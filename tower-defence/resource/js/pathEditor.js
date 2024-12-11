@@ -1,4 +1,17 @@
 document.addEventListener('DOMContentLoaded', (event) => {
+
+    const customMapData = localStorage.getItem('TD-customMap');
+    if (customMapData) {
+        try {
+            const map = JSON.parse(customMapData);
+            resetPath();
+            loadPath(map.path);
+            loadWater(map.water);
+        } catch (error) {
+            console.error('Failed to load custom map:', error);
+        }
+    }
+
     document.getElementById('savePathButton').addEventListener('click', () => {
         const data = getMap();
         console.log(data);
@@ -136,6 +149,7 @@ function resetPath() {
 }
 
 function testPath() {
+    moveSpeed = 2; // Lower is faster
     const path = getSelectedPath();
     if (path.length === 0) {
         alert('No path to test.');
@@ -150,9 +164,11 @@ function testPath() {
     }
     console.log(circle.dataset.randomOffset);
     circle.classList.add('circle');
+    circle.style.transition = `all ${moveSpeed}s linear`;
     document.body.appendChild(circle);
 
     let index = 0;
+    let firstCall = true;
     function moveCircle() {
         if (index >= path.length) {
             setTimeout(() => {
@@ -166,7 +182,12 @@ function testPath() {
         circle.style.left = `${(rect.left + window.scrollX + rect.width / 2 - circle.offsetWidth / 2)}px`;
         circle.style.top = `${(rect.top + window.scrollY + rect.height / 2 - circle.offsetHeight / 2) + parseInt(circle.dataset.randomOffset)}px`;
         index++;
-        setTimeout(moveCircle, 250);
+        if (firstCall) {
+            firstCall = false;
+            moveCircle();
+            return;
+        }
+        setTimeout(moveCircle, moveSpeed * 999);
     }
     moveCircle();
 }

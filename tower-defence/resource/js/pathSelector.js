@@ -4,13 +4,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 });
 
-let selectedPath = [];
-let selectedWater = [];
-let isDragging = false;
-let lastTile = null;
-let isFirstTile = true;
-let selectedTool = 'Path Painter'; 
-
 function enablePathSelection() {
     const gridContainer = document.getElementById('gameGrid');
     gridContainer.addEventListener('mousedown', (event) => {
