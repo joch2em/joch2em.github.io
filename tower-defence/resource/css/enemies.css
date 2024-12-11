@@ -3,6 +3,22 @@
     width: 20px;
     height: 20px;
     background-color: red;
-    border-radius: 50%;
+    /* border-radius: 50%; */
     transition: left 1s linear, top 1s linear;
+}
+
+.enemyHealthContainer {
+    position: absolute;
+    top: -10px;
+    left: -1px;
+    height: 3px;
+    width: 20px;
+    display: flex;
+    background-color: red;
+    border: 1px solid #2e2e2e;
+}
+
+.enemyHealth {
+    height: 100%;
+    background-color: green;
 }

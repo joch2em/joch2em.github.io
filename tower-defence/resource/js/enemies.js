@@ -14,11 +14,19 @@ class Enemy {
         const enemyDiv = document.createElement('div');
         enemyDiv.classList.add('enemy');
         document.getElementById('gameGrid').appendChild(enemyDiv);
+
+        const enemyHealthContainer = document.createElement('div');
+        enemyHealthContainer.classList.add('enemyHealthContainer');
+        enemyDiv.appendChild(enemyHealthContainer);
+
+        const enemyHealthBar = document.createElement('div');
+        enemyHealthBar.classList.add('enemyHealth');
+        enemyHealthBar.style.width = '100%';
+        enemyHealthContainer.appendChild(enemyHealthBar);
         return enemyDiv;
     }
 
     move() {
-        console.log('Moving enemy!');
         if (this.position < this.path.length) {
             const coord = this.path[this.position];
             const tile = document.getElementById('gameGrid').children[coord.y * 20 + coord.x];
@@ -35,6 +43,7 @@ class Enemy {
             setTimeout(() => this.move(), this.speed * 1000);
         } else {
             // Enemy reached the end of the path
+            damagePlayer();
             this.element.remove();
         }
     }
@@ -43,4 +52,12 @@ class Enemy {
 function spawnEnemy(path) {
     console.log('Spawning enemy with path:', path);
     new Enemy(enemyHealth, enemySpeed, path);
+}
+
+function damagePlayer() {
+    console.log('Player damaged!');
+    health -= 5;
+    playerHealth = (health / maxHealth) * 100;
+    console.log('Player health %:', playerHealth);
+    document.getElementById('playerHealth').style.width = `${playerHealth}%`;
 }

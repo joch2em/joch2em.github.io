@@ -14,6 +14,23 @@ body {
     height: 750px;
 }
 
+#playerHealthContainer {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    height: 10px;
+    width: 100px;
+    display: flex;
+    background-color: red;
+    border: 1px solid #555;
+}
+
+#playerHealth {
+    width: 100%;
+    position: relative;
+    background-color: green;
+}
+
 .tile {
     user-select: none;
     align-content: center;

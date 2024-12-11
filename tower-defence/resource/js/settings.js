@@ -1,4 +1,6 @@
 // Initialize the game settings
+let health = 250;
+const maxHealth = 250;
 const columns = 20;
 const rows = 10;
 let enemyHealth = 100;
