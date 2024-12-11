@@ -6,8 +6,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 function initializeGrid() {
     const gridContainer = document.getElementById('gameGrid');
-    const columns = 20;
-    const rows = 10;
     const itemSize = Math.min(gridContainer.clientWidth / columns, gridContainer.clientHeight / rows);
 
     gridContainer.style.display = 'grid';
@@ -19,6 +17,8 @@ function initializeGrid() {
     for (let i = 0; i < totalItems; i++) {
         const gridItem = document.createElement('div');
         gridItem.classList.add('tile');
+        gridItem.dataset.x = i % columns;
+        gridItem.dataset.y = Math.floor(i / columns);
         gridContainer.appendChild(gridItem);
     }
-}
+} 

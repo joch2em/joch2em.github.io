@@ -92,6 +92,8 @@
         <input type="checkbox" id="revealMinimap" name="revealMinimap"><br>
         <label for="debugMode">Reveal enemies and paths:</label>
         <input type="checkbox" id="debugMode" name="debugMode"><br>
+        <label for="startWithSword">Start with Sword:</label>
+        <input type="checkbox" id="startWithSword" name="startWithSword"><br>
         <button type="submit" style="color: #ffffff;">Save</button>
     </form>
     <button id="back-button" style="margin-top: 20px; background: #6c757d; color: #ffffff;">Start Game</button>
@@ -107,6 +109,7 @@
             const deleteSeedButton = document.getElementById('delete-seed');
             const revealMinimapCheckbox = document.getElementById('revealMinimap');
             const debugModeCheckbox = document.getElementById('debugMode');
+            const startWithSwordCheckbox = document.getElementById('startWithSword');
 
             upKeyButton.textContent = localStorage.getItem('rogueLight-upKey') || 'ArrowUp';
             downKeyButton.textContent = localStorage.getItem('rogueLight-downKey') || 'ArrowDown';
@@ -115,6 +118,7 @@
             seedInput.value = localStorage.getItem('rogueLight-seed') || '';
             revealMinimapCheckbox.checked = JSON.parse(localStorage.getItem('rogueLight-revealMinimap')) || false;
             debugModeCheckbox.checked = JSON.parse(localStorage.getItem('rogueLight-debugMode')) || false;
+            startWithSwordCheckbox.checked = JSON.parse(localStorage.getItem('rogueLight-startWithSword')) || false;
 
             const keyButtons = [upKeyButton, downKeyButton, leftKeyButton, rightKeyButton];
 
@@ -138,6 +142,7 @@
                 localStorage.setItem('rogueLight-rightKey', rightKeyButton.textContent);
                 localStorage.setItem('rogueLight-revealMinimap', revealMinimapCheckbox.checked);
                 localStorage.setItem('rogueLight-debugMode', debugModeCheckbox.checked);
+                localStorage.setItem('rogueLight-startWithSword', startWithSwordCheckbox.checked);
                 if (seedInput.value) {
                     localStorage.setItem('rogueLight-seed', seedInput.value);
                 } else {
@@ -160,6 +165,7 @@
                 localStorage.setItem('rogueLight-rightKey', rightKeyButton.textContent);
                 localStorage.setItem('rogueLight-revealMinimap', revealMinimapCheckbox.checked);
                 localStorage.setItem('rogueLight-debugMode', debugModeCheckbox.checked);
+                localStorage.setItem('rogueLight-startWithSword', startWithSwordCheckbox.checked);
                 if (seedInput.value) {
                     localStorage.setItem('rogueLight-seed', seedInput.value);
                 } else {

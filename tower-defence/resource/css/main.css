@@ -16,6 +16,8 @@ body {
 
 .tile {
     user-select: none;
+    align-content: center;
+    justify-items: center;
     background-color: #777;
     border: 1px solid #555;
     width: 100%;
@@ -43,6 +45,34 @@ body {
     background-color: blue;
 }
 
-.circle {
-    transition: all 0.5s;
+.tile.darker {
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.tower-menu {
+    position: absolute;
+    background-color: #333;
+    border: 1px solid #555;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.tower-option {
+    background-color: #777;
+    border: none;
+    color: #fff;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.tower-option:hover {
+    background-color: #555;
+}
+
+#startEnemies {
+    position: absolute;
+    top: 50%;
+    right: 10px;
 }

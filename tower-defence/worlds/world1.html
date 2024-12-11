@@ -5,16 +5,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>World 1</title>
+    <link rel="stylesheet" href="../resource/css/main.css">
+    <link rel="stylesheet" href="../resource/css/towers.css">
+    <link rel="stylesheet" href="../resource/css/enemies.css">
+    <script src="../resource/js/enemies.js" defer></script>
+    <script src="../resource/js/towers.js" defer></script>
     <script src="../resource/js/main.js" defer></script>
     <script src="../resource/js/world1.js" defer></script>
-    <!-- <script src="../resource/js/pathSelector.js" defer></script> -->
-    <link rel="stylesheet" href="../resource/css/main.css">
+    <script src="../resource/js/gameInteraction.js" defer></script>
 </head>
 
 <body>
-    <div id="gameGrid">
-        <!-- Grid items will be injected here by JavaScript -->
+    <div id="gameGrid"></div>
+    <div id="towerMenu" class="tower-menu" style="display: none;">
+        <button class="tower-option" value="rockThrower">Rock Thrower</button>
+        <button class="tower-option" value="10">Tower 2</button>
+        <button class="tower-option" value="10">Tower 3</button>
+        <button class="tower-option" value="10">Tower 4</button>
     </div>
+    <button id="startEnemies">Start Enemies</button>
 </body>
 
 </html>
