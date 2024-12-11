@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     document.getElementById('loadPathButton').addEventListener('click', () => {
         const pathInput = document.getElementById('pathInput').value;
-        let data = localStorage.getItem('TD-customData') ?? null;
+        let data = localStorage.getItem('TD-customMap') ?? null;
         if (!data && !pathInput) {
             alert('No data found in local storage or input field.');
             return;
