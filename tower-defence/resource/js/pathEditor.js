@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     if (customMapData) {
         try {
             const map = JSON.parse(customMapData);
+            console.log(map);
             resetPath();
             loadPath(map.path);
             loadWater(map.water);
