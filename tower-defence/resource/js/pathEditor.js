@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     document.getElementById('savePathButton').addEventListener('click', () => {
         const data = getMap();
         console.log(data);
-        localStorage.setItem('TD-customData', JSON.stringify(data));
+        localStorage.setItem('TD-customMap', JSON.stringify(data));
     });
 
     document.getElementById('loadPathButton').addEventListener('click', () => {
