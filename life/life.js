@@ -307,6 +307,11 @@ function startFoodTimer(element) {
             element.remove();
             deathCount++;
             updateCounters();
+            if (element === longestLivingCircle) {
+                longestLivingCircle = null;
+                longestLivingTime = 0;
+                document.querySelector('.longest-living-time').textContent = `Longest surviving: 0s`;
+            }
             updateLongestLivingCircle();
         }
     };
