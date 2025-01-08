@@ -145,15 +145,18 @@ function startCooldown(element) {
         element.appendChild(progressContainer);
     }
 
-    const cooldownBarBackground = document.createElement('div');
-    cooldownBarBackground.classList.add('progress-bar-background');
+    let cooldownBarBackground = element.querySelector('.cooldown-bar-background');
+    if (!cooldownBarBackground) {
+        cooldownBarBackground = document.createElement('div');
+        cooldownBarBackground.classList.add('progress-bar-background', 'cooldown-bar-background');
+        progressContainer.appendChild(cooldownBarBackground);
+    }
 
     const cooldownBar = document.createElement('div');
     cooldownBar.classList.add('progress-bar', 'cooldown-bar');
     cooldownBar.style.width = '100%';
 
     cooldownBarBackground.appendChild(cooldownBar);
-    progressContainer.appendChild(cooldownBarBackground);
 
     let cooldownTime = 60; // 60 seconds cooldown
     const cooldownStep = () => {
@@ -163,7 +166,7 @@ function startCooldown(element) {
             setTimeout(cooldownStep, 1000);
         } else {
             delete element.dataset.cooldown;
-            progressContainer.removeChild(cooldownBarBackground);
+            cooldownBarBackground.remove();
         }
     };
     cooldownStep();
