@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>life</title>
+    <style>
+        .field {
+            position: relative;
+            width: 70%;
+            height: 80vh;
+            border: 1px solid #000;
+        }
+        .life {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: crimson;
+            border-radius: 50%;
+        }
+        .cooldown-container {
+            position: absolute;
+            top: -10px;
+            left: -8px;
+            width: 50px;
+            height: 5px;
+            background-color: lightgray;
+        }
+        .cooldown-bar {
+            width: 100%;
+            height: 100%;
+            background-color: green;
+        }
+        .grow-container {
+            position: absolute;
+            top: -10px;
+            left: 0;
+            width: 50px;
+            height: 5px;
+            background-color: lightgray;
+        }
+        .grow-bar {
+            width: 0%;
+            height: 100%;
+            background-color: blue;
+        }
+        .progress-container {
+            position: absolute;
+            top: -15px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .progress-bar {
+            width: 50px;
+            height: 5px;
+            background-color: #c5c5c5; /* Very light grey background */
+            margin-bottom: 2px;
+        }
+        .cooldown-bar {
+            background-color: green;
+        }
+        .grow-bar {
+            background-color: blue;
+        }
+        .food {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: green;
+            border-radius: 50%;
+        }
+        .food-bar {
+            background-color: orange;
+        }
+        .legend {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            border: #000 solid 1px;
+            padding: 10px;
+            justify-content: space-between;
+            gap: 10px;
+            min-width: 175px;
+        }
+    </style>
+</head>
+<body>
+    <div class="legend">
+        <div class="counter">Circles born: 0</div>
+        <div class="food-eaten-counter">Food eaten: 0</div>
+        <div class="death-counter">Deaths: 0</div>
+        <div class="next-food-counter">Next food spawn in: 0s</div>
+    </div>
+    <div class="field">
+
+    </div>
+    
+    <div class="buttons">
+        <button>Add life</button>
+    </div>
+</body>
+<script src="life.js"></script>
+</html>
