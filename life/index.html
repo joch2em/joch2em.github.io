@@ -69,7 +69,7 @@
             position: absolute;
             width: 10px;
             height: 10px;
-            background-color: green;
+            background-color: gold;
             border-radius: 50%;
         }
         .food-bar {
@@ -87,6 +87,56 @@
             gap: 10px;
             min-width: 175px;
         }
+        .fertility {
+            width: 20px;
+            height: 20px;
+            background-color: green;
+        }
+        .hunger {
+            width: 20px;
+            height: 20px;
+            background-color: orange;
+        }
+        .growth {
+            width: 20px;
+            height: 20px;
+            background-color: blue;
+        }
+        .legend-food {
+            width: 10px;
+            height: 10px;
+            background-color: gold;
+            border-radius: 50%;
+            margin-right: 5px;
+            margin-left: 5px;
+        }
+        .info {
+            margin: 0;
+            width: 100px;
+        }
+        .info-box {
+            display: flex;
+            align-items: center;
+        }
+        .progress-bar-background {
+            width: 50px;
+            height: 5px;
+            background-color: #e0e0e0; /* Light grey background for the total duration */
+            position: relative;
+        }
+        .progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+        }
+        .crown {
+            position: absolute;
+            top: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            fill: gold;
+        }
     </style>
 </head>
 <body>
@@ -94,7 +144,24 @@
         <div class="counter">Circles born: 0</div>
         <div class="food-eaten-counter">Food eaten: 0</div>
         <div class="death-counter">Deaths: 0</div>
-        <div class="next-food-counter">Next food spawn in: 0s</div>
+        <div class="next-food-counter">Next food in: 0s</div>
+        <div class="longest-living-time">Longest surviving: 0s</div>
+        <div class="info-box">
+            <div class="fertility"></div>
+            <p class="info">: Fertility</p>
+        </div>
+        <div class="info-box">
+            <div class="hunger"></div>
+            <p class="info">: Hunger</p>
+        </div>
+        <div class="info-box">
+            <div class="growth"></div>
+            <p class="info">: Growth</p>
+        </div>
+        <div class="info-box">
+            <div class="legend-food"></div>
+            <p class="info">: Food</p>
+        </div>
     </div>
     <div class="field">
 
@@ -102,6 +169,7 @@
     
     <div class="buttons">
         <button>Add life</button>
+        <button class="spawn-food">Spawn Food</button>
     </div>
 </body>
 <script src="life.js"></script>

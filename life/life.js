@@ -1,16 +1,23 @@
 let touchSpawnCount = 0;
 let foodEatenCount = 0;
 let deathCount = 0;
-let nextFoodSpawnTime = Math.random() * 15000 + 15000;
+let nextFoodSpawnTime = Math.random() * 5000 + 25000;
+let longestLivingCircle = null;
+let longestLivingTime = 0;
+let longestLivingInterval = null;
 
 document.querySelector('.buttons button').addEventListener('click', () => {
     addLife();
 });
 
+document.querySelector('.buttons .spawn-food').addEventListener('click', () => {
+    spawnFood(true);
+});
+
 function updateCounters() {
     document.querySelector('.food-eaten-counter').textContent = `Food eaten: ${foodEatenCount}`;
     document.querySelector('.death-counter').textContent = `Deaths: ${deathCount}`;
-    document.querySelector('.next-food-counter').textContent = `Next food spawn in: ${Math.ceil(nextFoodSpawnTime / 1000)}s`;
+    document.querySelector('.next-food-counter').textContent = `Next food in: ${Math.ceil(nextFoodSpawnTime / 1000)}s`;
 }
 
 function addLife(size = 20, left = Math.random() * 90, top = Math.random() * 90, isTouchSpawn = false) {
@@ -26,6 +33,7 @@ function addLife(size = 20, left = Math.random() * 90, top = Math.random() * 90,
     circle.style.top = `${top}%`;
     circle.style.width = `${size}px`;
     circle.style.height = `${size}px`;
+    circle.dataset.birthTime = Date.now();
     if (isTouchSpawn) {
         circle.style.backgroundColor = 'red'; // New spawns are red
     }
@@ -40,6 +48,7 @@ function addLife(size = 20, left = Math.random() * 90, top = Math.random() * 90,
         addFoodProgressBar(circle);
         startFoodTimer(circle);
     }
+    updateLongestLivingCircle();
 }
 
 function addGrowProgressBar(element) {
@@ -50,11 +59,15 @@ function addGrowProgressBar(element) {
         element.appendChild(progressContainer);
     }
 
+    const growBarBackground = document.createElement('div');
+    growBarBackground.classList.add('progress-bar-background');
+
     const growBar = document.createElement('div');
     growBar.classList.add('progress-bar', 'grow-bar');
     growBar.style.width = '0%';
 
-    progressContainer.appendChild(growBar);
+    growBarBackground.appendChild(growBar);
+    progressContainer.appendChild(growBarBackground);
 }
 
 function grow(element) {
@@ -70,6 +83,7 @@ function grow(element) {
             }
             setTimeout(growStep, 1000);
         } else {
+            element.style.width = '20px';
             console.log('Growth complete');
             delete element.dataset.growing;
             element.style.backgroundColor = 'crimson'; // Turn crimson when done growing
@@ -131,11 +145,15 @@ function startCooldown(element) {
         element.appendChild(progressContainer);
     }
 
+    const cooldownBarBackground = document.createElement('div');
+    cooldownBarBackground.classList.add('progress-bar-background');
+
     const cooldownBar = document.createElement('div');
     cooldownBar.classList.add('progress-bar', 'cooldown-bar');
     cooldownBar.style.width = '100%';
 
-    progressContainer.appendChild(cooldownBar);
+    cooldownBarBackground.appendChild(cooldownBar);
+    progressContainer.appendChild(cooldownBarBackground);
 
     let cooldownTime = 60; // 60 seconds cooldown
     const cooldownStep = () => {
@@ -145,7 +163,7 @@ function startCooldown(element) {
             setTimeout(cooldownStep, 1000);
         } else {
             delete element.dataset.cooldown;
-            progressContainer.removeChild(cooldownBar);
+            progressContainer.removeChild(cooldownBarBackground);
         }
     };
     cooldownStep();
@@ -166,7 +184,12 @@ function checkCollisions() {
                              rect1.top > rect2.bottom);
             if (overlap) {
                 console.log('Circles are touching');
-                if (parseFloat(circle1.style.width) === 20 && parseFloat(circle2.style.width) === 20 && !circle1.dataset.growing && !circle2.dataset.growing && !circle1.dataset.cooldown && !circle2.dataset.cooldown) {
+                const circle1FoodTime = parseInt(circle1.dataset.foodTime, 10);
+                const circle2FoodTime = parseInt(circle2.dataset.foodTime, 10);
+                if (parseFloat(circle1.style.width) === 20 && parseFloat(circle2.style.width) === 20 && 
+                    !circle1.dataset.growing && !circle2.dataset.growing && 
+                    !circle1.dataset.cooldown && !circle2.dataset.cooldown &&
+                    circle1FoodTime > 40 && circle2FoodTime > 40) {
                     console.log(`Creating new circle at: left=${circle2.style.left}, top=${circle2.style.top}`);
                     addLife(5, parseFloat(circle2.style.left), parseFloat(circle2.style.top), true); // Create a new small circle at the same location as one of the touching circles
                     startCooldown(circle1);
@@ -198,7 +221,7 @@ function checkCollisions() {
     requestAnimationFrame(checkCollisions);
 }
 
-function spawnFood() {
+function spawnFood(manualSpawn = false) {
     const field = document.querySelector('.field');
     const food = document.createElement('div');
     food.classList.add('food');
@@ -229,8 +252,10 @@ function spawnFood() {
     food.style.height = '10px';
     field.appendChild(food);
 
-    nextFoodSpawnTime = Math.random() * 15000 + 15000;
-    updateCounters();
+    if (!manualSpawn) {
+        nextFoodSpawnTime = Math.random() * 5000 + 25000;
+        updateCounters();
+    }
 }
 
 setInterval(() => {
@@ -252,11 +277,15 @@ function addFoodProgressBar(element) {
         element.appendChild(progressContainer);
     }
 
+    const foodBarBackground = document.createElement('div');
+    foodBarBackground.classList.add('progress-bar-background');
+
     const foodBar = document.createElement('div');
     foodBar.classList.add('progress-bar', 'food-bar');
     foodBar.style.width = '100%';
 
-    progressContainer.appendChild(foodBar);
+    foodBarBackground.appendChild(foodBar);
+    progressContainer.appendChild(foodBarBackground);
 }
 
 function startFoodTimer(element) {
@@ -278,6 +307,7 @@ function startFoodTimer(element) {
             element.remove();
             deathCount++;
             updateCounters();
+            updateLongestLivingCircle();
         }
     };
     foodStep();
@@ -331,3 +361,41 @@ function checkFoodCollision(element) {
         }
     });
 }
+
+function updateLongestLivingCircle() {
+    if (longestLivingCircle) {
+        longestLivingCircle.querySelector('.crown').remove();
+    }
+
+    const circles = document.querySelectorAll('.life');
+    let maxTime = 0;
+    circles.forEach(circle => {
+        const birthTime = parseInt(circle.dataset.birthTime, 10);
+        const aliveTime = Date.now() - birthTime;
+        if (aliveTime > maxTime) {
+            maxTime = aliveTime;
+            longestLivingCircle = circle;
+        }
+    });
+
+    if (longestLivingCircle) {
+        const crown = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        crown.setAttribute("class", "crown");
+        crown.setAttribute("width", "16");
+        crown.setAttribute("height", "16");
+        crown.setAttribute("viewBox", "0 0 24 24");
+        crown.innerHTML = '<path d="M12 2l3 7h6l-5 4 2 7-6-4-6 4 2-7-5-4h6z"/>';
+        longestLivingCircle.appendChild(crown);
+    }
+
+    longestLivingTime = maxTime;
+    document.querySelector('.longest-living-time').textContent = `Longest surviving: ${Math.floor(longestLivingTime / 1000)}s`;
+}
+
+setInterval(() => {
+    if (longestLivingCircle) {
+        const birthTime = parseInt(longestLivingCircle.dataset.birthTime, 10);
+        longestLivingTime = Date.now() - birthTime;
+        document.querySelector('.longest-living-time').textContent = `Longest surviving: ${Math.floor(longestLivingTime / 1000)}s`;
+    }
+}, 1000);
