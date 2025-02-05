@@ -5,6 +5,7 @@ let nextFoodSpawnTime = Math.random() * 5000 + 25000;
 let longestLivingCircle = null;
 let longestLivingTime = 0;
 let longestLivingInterval = null;
+let frameCount = 0;
 
 document.querySelector('.buttons button').addEventListener('click', () => {
     addLife();
@@ -34,6 +35,7 @@ function addLife(size = 20, left = Math.random() * 90, top = Math.random() * 90,
     circle.style.width = `${size}px`;
     circle.style.height = `${size}px`;
     circle.dataset.birthTime = Date.now();
+    circle.dataset.isParent = 'false';
     if (isTouchSpawn) {
         circle.style.backgroundColor = 'red'; // New spawns are red
     }
@@ -49,6 +51,7 @@ function addLife(size = 20, left = Math.random() * 90, top = Math.random() * 90,
         startFoodTimer(circle);
     }
     updateLongestLivingCircle();
+    return circle; // Return the created circle
 }
 
 function addGrowProgressBar(element) {
@@ -79,7 +82,7 @@ function grow(element) {
             element.style.height = `${newSize}px`;
             const growBar = element.querySelector('.grow-bar');
             if (growBar) {
-                growBar.style.width = `${(newSize / 20) * 100}%`;
+                growBar.style.width = `${((newSize - 5) / 15) * 100}%`;
             }
             setTimeout(growStep, 1000);
         } else {
@@ -88,9 +91,8 @@ function grow(element) {
             delete element.dataset.growing;
             element.style.backgroundColor = 'crimson'; // Turn crimson when done growing
             const growBar = element.querySelector('.grow-bar');
-            if (growBar) {
-                growBar.remove(); // Remove the grow bar
-            }
+            growBar.remove(); // Remove the grow bar
+            
             addFoodProgressBar(element);
             startFoodTimer(element);
         }
@@ -100,8 +102,8 @@ function grow(element) {
 
 function moveRandomly(element) {
     const move = () => {
-        if (Math.random() < 0.25) { // 25% chance to stand still
-            setTimeout(move, 1000);
+        if (Math.random() < 0.70) { // 70% chance to stand still
+            setTimeout(move, 500);
             return;
         }
 
@@ -109,16 +111,30 @@ function moveRandomly(element) {
         const top = parseFloat(element.style.top);
 
         let newLeft, newTop;
-        if (Math.random() < 0.2) { // 20% chance to move towards another circle
-            const circles = document.querySelectorAll('.life');
-            if (circles.length > 1) {
-                const target = circles[Math.floor(Math.random() * circles.length)];
-                if (target !== element) {
-                    const targetLeft = parseFloat(target.style.left);
-                    const targetTop = parseFloat(target.style.top);
-                    newLeft = left + (targetLeft - left) * 0.1;
-                    newTop = top + (targetTop - top) * 0.1;
+
+        if (Math.random() < 0.4) { // 40% chance to move towards another circle
+            let target = null;
+            if (element.dataset.isParent === 'true') {
+                const circles = document.querySelectorAll('.life');
+                circles.forEach(circle => {
+                    if (circle !== element && (circle.dataset.isParent === 'true' || circle.dataset.isChild === 'true')) {
+                        target = circle;
+                    }
+                });
+            } else {
+                const circles = document.querySelectorAll('.life');
+                if (circles.length > 1) {
+                    target = circles[Math.floor(Math.random() * circles.length)];
+                    if (target === element) {
+                        target = null;
+                    }
                 }
+            }
+            if (target) {
+                const targetLeft = parseFloat(target.style.left);
+                const targetTop = parseFloat(target.style.top);
+                newLeft = left + (targetLeft - left) * 0.1;
+                newTop = top + (targetTop - top) * 0.1;
             }
         }
 
@@ -158,21 +174,28 @@ function startCooldown(element) {
 
     cooldownBarBackground.appendChild(cooldownBar);
 
-    let cooldownTime = 60; // 60 seconds cooldown
+    let cooldownTime = 300; // 60 seconds cooldown
     const cooldownStep = () => {
         cooldownTime--;
-        cooldownBar.style.width = `${(cooldownTime / 60) * 100}%`;
+        cooldownBar.style.width = `${(cooldownTime / 300) * 100}%`;
         if (cooldownTime > 0) {
             setTimeout(cooldownStep, 1000);
         } else {
+            delete element.dataset.isParent;
             delete element.dataset.cooldown;
             cooldownBarBackground.remove();
-        }
+        }  
     };
     cooldownStep();
 }
 
 function checkCollisions() {
+    frameCount++;
+    if (frameCount % 10 !== 0) {
+        requestAnimationFrame(checkCollisions);
+        return;
+    }
+
     const circles = document.querySelectorAll('.life');
     const foods = document.querySelectorAll('.food');
     
@@ -186,15 +209,16 @@ function checkCollisions() {
                              rect1.bottom < rect2.top || 
                              rect1.top > rect2.bottom);
             if (overlap) {
-                console.log('Circles are touching');
                 const circle1FoodTime = parseInt(circle1.dataset.foodTime, 10);
                 const circle2FoodTime = parseInt(circle2.dataset.foodTime, 10);
                 if (parseFloat(circle1.style.width) === 20 && parseFloat(circle2.style.width) === 20 && 
                     !circle1.dataset.growing && !circle2.dataset.growing && 
                     !circle1.dataset.cooldown && !circle2.dataset.cooldown &&
                     circle1FoodTime > 40 && circle2FoodTime > 40) {
-                    console.log(`Creating new circle at: left=${circle2.style.left}, top=${circle2.style.top}`);
-                    addLife(5, parseFloat(circle2.style.left), parseFloat(circle2.style.top), true); // Create a new small circle at the same location as one of the touching circles
+                    const child = addLife(5, parseFloat(circle2.style.left), parseFloat(circle2.style.top), true); // Create a new small circle at the same location as one of the touching circles
+                    circle1.dataset.isParent = 'true';
+                    circle2.dataset.isParent = 'true';
+                    child.dataset.isChild = 'true';
                     startCooldown(circle1);
                     startCooldown(circle2);
                 }
@@ -325,21 +349,22 @@ function moveToNearestFood(element) {
     const foods = document.querySelectorAll('.food');
     if (foods.length === 0) return;
 
-    let nearestFood = null;
-    let minDistance = Infinity;
     const elementRect = element.getBoundingClientRect();
+    const foodDistances = [];
 
     foods.forEach(food => {
         const foodRect = food.getBoundingClientRect();
         const distance = Math.hypot(foodRect.left - elementRect.left, foodRect.top - elementRect.top);
-        if (distance < minDistance) {
-            minDistance = distance;
-            nearestFood = food;
-        }
+        foodDistances.push({ food, distance });
     });
 
-    if (nearestFood) {
-        const foodRect = nearestFood.getBoundingClientRect();
+    foodDistances.sort((a, b) => a.distance - b.distance);
+
+    const closestFoods = foodDistances.slice(0, 5);
+    const targetFood = closestFoods[Math.floor(Math.random() * closestFoods.length)].food;
+
+    if (targetFood) {
+        const foodRect = targetFood.getBoundingClientRect();
         const fieldRect = document.querySelector('.field').getBoundingClientRect();
         const newLeft = ((foodRect.left - fieldRect.left) / fieldRect.width) * 100;
         const newTop = ((foodRect.top - fieldRect.top) / fieldRect.height) * 100;

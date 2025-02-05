@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exit - RogueLight</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .items-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .items-list li {
+            margin: 10px 0;
+        }
+
+        button {
+            background: #007BFF;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Collected Items</h1>
+    <ul class="items-list" id="items-list"></ul>
+    <button id="new-level-button">Load New Level</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const itemsList = document.getElementById('items-list');
+            const collectedItems = [];
+
+            urlParams.forEach((value, key) => {
+                if (key === 'item') {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = value;
+                    itemsList.appendChild(listItem);
+                    collectedItems.push(value);
+                }
+            });
+
+            document.getElementById('new-level-button').addEventListener('click', () => {
+                const itemsQuery = collectedItems.map(item => `item=${encodeURIComponent(item)}`).join('&');
+                window.location.href = `layer_1/index.html?${itemsQuery}`; // Redirect to the game to load a new level
+            });
+        });
+    </script>
+</body>
+
+</html>

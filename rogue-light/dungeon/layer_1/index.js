@@ -264,9 +264,12 @@ function create() {
     this.physics.add.collider(this.enemyGroup, this.walls); // Add collision between enemies and walls
     this.physics.add.overlap(this.player, this.enemyGroup, playerHit, null, this); // Add overlap detection
     this.weapon = null; // Initialize weapon as null
+    
     this.physics.add.overlap(this.player, this.features, (player, feature) => {
-        console.log('Overlap detected');
         pickupWeapon.call(this, player, feature);
+        if (feature.fillColor === 13619151) {
+            handleExit.call(this);
+        }
     }, null, this); // Add overlap detection for weapon pickup with logging
 
     // Set up the camera to follow the player
@@ -834,4 +837,13 @@ function isConnected(x1, y1, x2, y2) {
     }
 
     return false;
+}
+
+function handleExit() {
+    // Collect the items the player has collected
+    const collectedItems = ['test', 'test2']; // Replace with actual logic to collect items
+
+    // Redirect to the new page with collected items as query parameters
+    const itemsQuery = collectedItems.map(item => `item=${encodeURIComponent(item)}`).join('&');
+    window.location.href = `../exit.html?${itemsQuery}`;
 }

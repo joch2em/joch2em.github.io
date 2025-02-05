@@ -1,0 +1,137 @@
+.field {
+  position: relative;
+  width: 70%;
+  height: 80vh;
+  border: 1px solid #000;
+}
+.life {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: crimson;
+  border-radius: 50%;
+}
+.cooldown-container {
+  position: absolute;
+  top: -10px;
+  left: -8px;
+  width: 50px;
+  height: 5px;
+  background-color: lightgray;
+}
+.cooldown-bar {
+  width: 100%;
+  height: 100%;
+  background-color: green;
+}
+.grow-container {
+  position: absolute;
+  top: -10px;
+  left: 0;
+  width: 50px;
+  height: 5px;
+  background-color: lightgray;
+}
+.grow-bar {
+  width: 0%;
+  height: 100%;
+  background-color: blue;
+}
+.progress-container {
+  position: absolute;
+  top: -15px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.progress-bar {
+  width: 50px;
+  height: 5px;
+  background-color: #c5c5c5; /* Very light grey background */
+  margin-bottom: 2px;
+}
+.cooldown-bar {
+  background-color: green;
+}
+.grow-bar {
+  background-color: blue;
+}
+.food {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: gold;
+  border-radius: 50%;
+}
+.food-bar {
+  background-color: orange;
+}
+.legend {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  border: #000 solid 1px;
+  padding: 10px;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 175px;
+}
+.fertility {
+  width: 20px;
+  height: 20px;
+  background-color: green;
+}
+.hunger {
+  width: 20px;
+  height: 20px;
+  background-color: orange;
+}
+.growth {
+  width: 20px;
+  height: 20px;
+  background-color: blue;
+}
+.legend-food {
+  width: 10px;
+  height: 10px;
+  background-color: gold;
+  border-radius: 50%;
+  margin-right: 5px;
+  margin-left: 5px;
+}
+.info {
+  margin: 0;
+  width: 100px;
+}
+.info-box {
+  display: flex;
+  align-items: center;
+}
+.progress-bar-background {
+  width: 50px;
+  height: 5px;
+  background-color: #e0e0e0; /* Light grey background for the total duration */
+  position: relative;
+}
+.progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+}
+.crown {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  fill: gold;
+}
+.cooldown-bar-background {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
