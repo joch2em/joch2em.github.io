@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>BrickBreaker</title>
+</head>
+<body>
+    <div class="gameContainer" id="gameContainer">
+        <span class="score" id="score">0</span>
+        <div class="playField" id="playField">
+            <div class="brickField" id="brickField"></div>
+        </div>
+        <button class="startButton" id="startButton">Start</button>
+    </div>
+</body>
+</html>
+
+<script>
+    var brickField = document.getElementById("brickField");
+    var score = document.getElementById("score");
+    var gameContainer = document.getElementById("gameContainer");
+    var playField = document.getElementById("playField");
+    var startButton = document.getElementById("startButton");
+    var gameOver = false;
+    var paddleSpeed = 10;
+    var ballSpeed = 5;
+    var ballDirectionX = 1;
+    var ballDirectionY = 1;
+    var amountOfBricks = 100;
+    var powerUps = [];
+    
+    class Brick {
+        constructor() {
+            this.brick = document.createElement("div");
+            this.brick.classList.add("brick");
+
+            if (Math.random() < 0.5) {
+                this.brick.style.backgroundColor = "red";
+                this.brick.setAttribute('powerup', 'widerPaddle');
+            }
+
+
+
+            brickField.appendChild(this.brick);
+        }
+    }
+
+    function resetBricks() {
+        brickField.innerHTML = '';
+        for (let i = 0; i < amountOfBricks; i++) {
+            new Brick();
+        }
+    }
+
+    class Paddle{
+        constructor(){
+            this.paddle = document.createElement("div");
+            this.paddle.classList.add("paddle");
+            playField.appendChild(this.paddle);
+            this.paddle.style.left = (playField.clientWidth / 2 - this.paddle.clientWidth / 2) + "px"; // Center the paddle initially
+            this.movingLeft = false;
+            this.movingRight = false;
+        }
+
+        move(x){
+            let currentLeft = parseInt(this.paddle.style.left);
+            this.paddle.style.left = (currentLeft + x) + "px";
+        }
+    }
+
+    class Ball {
+        constructor() {
+            this.ball = document.createElement("div");
+            this.ball.classList.add("ball");
+            playField.appendChild(this.ball);
+            this.ball.style.left = (playField.clientWidth / 2 - this.ball.clientWidth / 2) + "px";
+            this.ball.style.top = (paddle.paddle.offsetTop - this.ball.clientHeight - 10) + "px"; // Spawn above the paddle
+            ballDirectionY = -1; // Make the ball go up first
+        }
+
+        move() {
+            let currentLeft = parseInt(this.ball.style.left);
+            let currentTop = parseInt(this.ball.style.top);
+
+            if (currentLeft <= 0 || currentLeft + this.ball.clientWidth >= playField.clientWidth) {
+                ballDirectionX *= -1; // Reverse direction without changing speed
+            }
+
+            if (currentTop <= 0) {
+                ballDirectionY *= -1; // Reverse direction without changing speed
+            }
+
+            if (currentTop + this.ball.clientHeight >= playField.clientHeight) {
+                gameOver = true;
+                alert("Game Over!");
+                startButton.style.display = "block";
+                this.ball.remove(); // Remove the ball
+                return;
+            }
+
+            if (currentTop + this.ball.clientHeight >= paddle.paddle.offsetTop &&
+                currentLeft + this.ball.clientWidth >= paddle.paddle.offsetLeft &&
+                currentLeft <= paddle.paddle.offsetLeft + paddle.paddle.clientWidth) {
+                ballDirectionY *= -1; // Reverse direction without changing speed
+            }
+
+            this.checkBrickCollision();
+
+            this.ball.style.left = (currentLeft + ballSpeed * ballDirectionX) + "px";
+            this.ball.style.top = (currentTop + ballSpeed * ballDirectionY) + "px";
+        }
+
+        checkBrickCollision() {
+            let ballRect = this.ball.getBoundingClientRect();
+            let bricks = document.querySelectorAll('.brick');
+            for (let brick of bricks) {
+                if (brick.style.visibility == "hidden") continue; // skip hidden bricks
+                let brickRect = brick.getBoundingClientRect();
+                if (ballRect.left < brickRect.right &&
+                    ballRect.right > brickRect.left &&
+                    ballRect.top < brickRect.bottom &&
+                    ballRect.bottom > brickRect.top) {
+                    brick.style.visibility = "hidden"; // Hide the brick
+                    ballDirectionY *= -1; // Reverse direction on collision
+                    score.innerText = parseInt(score.innerText) + 1; // Update score
+
+                    if (brick.attributes.powerup) {
+                        let powerUp = new PowerUp(brickRect.left + brickRect.width / 2 - 10, brickRect.top, brick.attributes.powerup.value);
+                        powerUps.push(powerUp);
+                    }
+
+                    break; // Stop the loop after the first collision
+                }
+            }
+        }
+    }
+
+    class PowerUp {
+        constructor(x, y, type) {
+            this.powerUp = document.createElement("div");
+            this.powerUp.classList.add("powerUp");
+            this.powerUp.style.left = x + "px";
+            this.powerUp.style.top = y + "px";
+            this.type = type;
+            playField.appendChild(this.powerUp);
+            console.log(this.type);
+        }
+
+        move() {
+            let currentTop = parseInt(this.powerUp.style.top);
+            if (currentTop + this.powerUp.clientHeight >= playField.clientHeight) {
+                this.powerUp.remove();
+                return false;
+            }
+            if (currentTop + this.powerUp.clientHeight >= paddle.paddle.offsetTop &&
+                parseInt(this.powerUp.style.left) + this.powerUp.clientWidth >= paddle.paddle.offsetLeft &&
+                parseInt(this.powerUp.style.left) <= paddle.paddle.offsetLeft + paddle.paddle.clientWidth) {
+                this.activate();
+                this.powerUp.remove();
+                return false;
+            }
+            this.powerUp.style.top = (currentTop + 2) + "px";
+            return true;
+        }
+
+        activate() {
+            if (this.type === 'widerPaddle') {
+                paddle.paddle.style.left = (paddle.paddle.offsetLeft - 25) + 'px';
+                paddle.paddle.style.width = (paddle.paddle.clientWidth + 50) + 'px';
+            }
+        }
+    }
+
+    function powerUpHandeler(powerUp){
+        if (powerUp == 'widerPaddle'){
+            paddle.paddle.style.width = (paddle.paddle.clientWidth + 50) + 'px';
+        }
+    }
+
+    document.addEventListener("keydown", function(event){
+        if (event.key === "ArrowLeft") {
+            paddle.movingLeft = true;
+        }
+        if (event.key === "ArrowRight") {
+            paddle.movingRight = true;
+        }
+    });
+
+    document.addEventListener("keyup", function(event){
+        if (event.key === "ArrowLeft") {
+            paddle.movingLeft = false;
+        }
+        if (event.key === "ArrowRight") {
+            paddle.movingRight = false;
+        }
+    });
+
+    var ball;
+    var paddle = new Paddle();
+
+    function gameLoop(){
+        if (!gameOver){
+            ball.move();
+            if (paddle.movingLeft && paddle.paddle.offsetLeft > 0) {
+                paddle.move(-paddleSpeed);
+            }
+            if (paddle.movingRight && paddle.paddle.offsetLeft + paddle.paddle.clientWidth < playField.clientWidth) {
+                paddle.move(paddleSpeed);
+            }
+            powerUps = powerUps.filter(powerUp => powerUp.move());
+            requestAnimationFrame(gameLoop);
+        }
+    }
+
+    startButton.addEventListener("click", function(){
+        startButton.style.display = "none";
+        gameOver = false;
+        resetBricks();
+        ball = new Ball();
+        gameLoop();
+    });
+</script>

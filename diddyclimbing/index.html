@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diddy Climber</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #87CEEB, #98FB98);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 2px solid #333;
+            background: linear-gradient(to bottom, #87CEEB, #98FB98);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #333;
+            background: rgba(255,255,255,0.8);
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <p><strong>Controls:</strong></p>
+        <p>A - Left hand grab</p>
+        <p>D - Right hand grab</p>
+        <p>Space - Jump</p>
+        <p>Left/Right arrows - Air movement</p>
+        <p>T - Toggle debug visuals</p>
+    </div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <img id="diddyKong" src="diddykong.png" style="position: absolute; transform-origin: center; pointer-events: none; z-index: 10;">
+    
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const diddyImg = document.getElementById('diddyKong');
+        
+        const keys = {};
+        let gravity = 0.5;
+        let friction = 0.98;
+        let debugVisuals = false;
+        
+        const diddyConfig = {
+            width: 70,
+            height: 50
+        };
+        
+        const player = {
+            x: 400,
+            y: 300,
+            vx: 0,
+            vy: 0,
+            width: 20,
+            height: 30,
+            leftHand: { x: 0, y: 0, grabbing: false, grabPoint: null },
+            rightHand: { x: 0, y: 0, grabbing: false, grabPoint: null },
+            angle: 0,
+            angularVelocity: 0,
+            jumpPower: 12,
+            moveSpeed: 5
+        };
+        
+        const walls = [
+            { x: 50, y: 0, width: 20, height: 600 },
+            { x: 730, y: 0, width: 20, height: 600 },
+            { x: 200, y: 150, width: 400, height: 20 },
+            { x: 300, y: 250, width: 200, height: 100 },
+            { x: 150, y: 300, width: 100, height: 20 },
+            { x: 550, y: 300, width: 100, height: 20 },
+            { x: 300, y: 450, width: 200, height: 20 }
+        ];
+        
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            
+            if (e.key === ' ') {
+                e.preventDefault();
+                jump();
+            }
+            
+            if (e.key.toLowerCase() === 't') {
+                debugVisuals = !debugVisuals;
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+        
+        function updateHandPositions() {
+            const handOffset = 10;
+            
+            const bodyRadius = player.width / 2;
+            const totalOffset = bodyRadius + handOffset;
+            
+            player.leftHand.x = player.x - totalOffset * Math.cos(player.angle);
+            player.leftHand.y = player.y - totalOffset * Math.sin(player.angle);
+            
+            player.rightHand.x = player.x + totalOffset * Math.cos(player.angle);
+            player.rightHand.y = player.y + totalOffset * Math.sin(player.angle);
+        }
+        
+        function checkWallCollision(x, y) {
+            for (let wall of walls) {
+                if (x >= wall.x && x <= wall.x + wall.width &&
+                    y >= wall.y && y <= wall.y + wall.height) {
+                    return wall;
+                }
+            }
+            return null;
+        }
+        
+        function handleGrabbing() {
+            updateHandPositions();
+            
+            if (keys['a'] && !player.leftHand.grabbing) {
+                const wall = checkWallCollision(player.leftHand.x, player.leftHand.y);
+                if (wall) {
+                    player.leftHand.grabbing = true;
+                    player.leftHand.grabPoint = {
+                        x: Math.max(wall.x, Math.min(wall.x + wall.width, player.leftHand.x)),
+                        y: Math.max(wall.y, Math.min(wall.y + wall.height, player.leftHand.y))
+                    };
+                    
+                    const handOffset = 10;
+                    const bodyRadius = player.width / 2;
+                    const armLength = bodyRadius + handOffset;
+                    
+                    const targetAngle = Math.atan2(
+                        player.leftHand.grabPoint.y - player.y,
+                        player.leftHand.grabPoint.x - player.x
+                    ) + Math.PI;
+                    
+                    player.angle = targetAngle;
+                    
+                    player.x = player.leftHand.grabPoint.x + armLength * Math.cos(player.angle);
+                    player.y = player.leftHand.grabPoint.y + armLength * Math.sin(player.angle);
+                }
+            } else if (!keys['a']) {
+                if (player.leftHand.grabbing) {
+                    const bothHandsGrabbing = player.leftHand.grabbing && player.rightHand.grabbing;
+                    const rightHandBeingReleased = !keys['d'];
+                    
+                    if (bothHandsGrabbing && rightHandBeingReleased) {
+                        const jumpSpeed = player.jumpPower;
+                        player.vx = Math.cos(player.angle - Math.PI/2) * jumpSpeed * 0.8;
+                        player.vy = Math.sin(player.angle - Math.PI/2) * jumpSpeed * 0.8 - jumpSpeed;
+                        
+                        player.leftHand.grabbing = false;
+                        player.leftHand.grabPoint = null;
+                        player.rightHand.grabbing = false;
+                        player.rightHand.grabPoint = null;
+                    } else if (!player.rightHand.grabbing) {
+                        const speed = 15;
+                        player.vx = Math.cos(player.angle + Math.PI/2) * speed * Math.sign(player.angularVelocity);
+                        player.vy = Math.sin(player.angle + Math.PI/2) * speed * Math.sign(player.angularVelocity) - 5;
+                        
+                        player.leftHand.grabbing = false;
+                        player.leftHand.grabPoint = null;
+                    } else {
+                        player.leftHand.grabbing = false;
+                        player.leftHand.grabPoint = null;
+                    }
+                }
+            }
+            
+            if (keys['d'] && !player.rightHand.grabbing) {
+                const wall = checkWallCollision(player.rightHand.x, player.rightHand.y);
+                if (wall) {
+                    player.rightHand.grabbing = true;
+                    player.rightHand.grabPoint = {
+                        x: Math.max(wall.x, Math.min(wall.x + wall.width, player.rightHand.x)),
+                        y: Math.max(wall.y, Math.min(wall.y + wall.height, player.rightHand.y))
+                    };
+                    
+                    const handOffset = 10;
+                    const bodyRadius = player.width / 2;
+                    const armLength = bodyRadius + handOffset;
+                    
+                    const targetAngle = Math.atan2(
+                        player.rightHand.grabPoint.y - player.y,
+                        player.rightHand.grabPoint.x - player.x
+                    );
+                    
+                    player.angle = targetAngle;
+                    
+                    player.x = player.rightHand.grabPoint.x - armLength * Math.cos(player.angle);
+                    player.y = player.rightHand.grabPoint.y - armLength * Math.sin(player.angle);
+                }
+            } else if (!keys['d']) {
+                if (player.rightHand.grabbing) {
+                    const bothHandsGrabbing = player.leftHand.grabbing && player.rightHand.grabbing;
+                    const leftHandBeingReleased = !keys['a'];
+                    
+                    if (bothHandsGrabbing && leftHandBeingReleased) {
+                        player.rightHand.grabbing = false;
+                        player.rightHand.grabPoint = null;
+                    } else if (!player.leftHand.grabbing) {
+                        const speed = 15;
+                        player.vx = Math.cos(player.angle - Math.PI/2) * speed * Math.sign(player.angularVelocity);
+                        player.vy = Math.sin(player.angle - Math.PI/2) * speed * Math.sign(player.angularVelocity) - 5;
+                        
+                        player.rightHand.grabbing = false;
+                        player.rightHand.grabPoint = null;
+                    } else {
+                        player.rightHand.grabbing = false;
+                        player.rightHand.grabPoint = null;
+                    }
+                }
+            }
+        }
+        
+        function updatePhysics() {
+            const leftGrabbing = player.leftHand.grabbing;
+            const rightGrabbing = player.rightHand.grabbing;
+            
+            if (leftGrabbing && rightGrabbing) {
+                player.angularVelocity = 0;
+                
+                const centerX = (player.leftHand.grabPoint.x + player.rightHand.grabPoint.x) / 2;
+                const centerY = (player.leftHand.grabPoint.y + player.rightHand.grabPoint.y) / 2;
+                
+                player.x = centerX;
+                player.y = centerY;
+                player.vx = 0;
+                player.vy = 0;
+                
+            } else if (leftGrabbing && !rightGrabbing) {
+                const grabPoint = player.leftHand.grabPoint;
+                const rotationSpeed = 0.05;
+                const handOffset = 10;
+                const bodyRadius = player.width / 2;
+                const armLength = bodyRadius + handOffset;
+
+                player.angularVelocity = -rotationSpeed;
+                player.angle += player.angularVelocity;
+
+                player.x = grabPoint.x + armLength * Math.cos(player.angle);
+                player.y = grabPoint.y + armLength * Math.sin(player.angle);
+
+                player.vx = 0;
+                player.vy = 0;
+                
+            } else if (rightGrabbing && !leftGrabbing) {
+                const grabPoint = player.rightHand.grabPoint;
+                const rotationSpeed = 0.05;
+                const handOffset = 10;
+                const bodyRadius = player.width / 2;
+                const armLength = bodyRadius + handOffset;
+
+                player.angularVelocity = rotationSpeed;
+                player.angle += player.angularVelocity;
+
+                player.x = grabPoint.x - armLength * Math.cos(player.angle);
+                player.y = grabPoint.y - armLength * Math.sin(player.angle);
+
+                player.vx = 0;
+                player.vy = 0;
+                
+            } else {
+                player.vy += gravity;
+                
+                if (keys['arrowleft']) player.vx -= 0.3;
+                if (keys['arrowright']) player.vx += 0.3;
+                
+                player.vx *= friction;
+                player.vy *= 0.99;
+                
+                player.x += player.vx;
+                player.y += player.vy;
+                
+                player.angularVelocity = 0;
+                
+                if (player.y > canvas.height - player.height) {
+                    player.y = canvas.height - player.height;
+                    player.vy = 0;
+                    player.vx *= 0.8;
+                    player.angle = 0;
+                }
+            }
+            
+            if (player.x < 0) player.x = 0;
+            if (player.x > canvas.width) player.x = canvas.width;
+            if (player.y < 0) player.y = 0;
+        }
+        
+        function jump() {
+            const leftGrabbing = player.leftHand.grabbing;
+            const rightGrabbing = player.rightHand.grabbing;
+            
+            if (leftGrabbing || rightGrabbing) {
+                player.leftHand.grabbing = false;
+                player.leftHand.grabPoint = null;
+                player.rightHand.grabbing = false;
+                player.rightHand.grabPoint = null;
+                
+                if (leftGrabbing && rightGrabbing) {
+                    const jumpSpeed = player.jumpPower;
+                    player.vx = Math.cos(player.angle - Math.PI/2) * jumpSpeed * 0.8;
+                    player.vy = Math.sin(player.angle - Math.PI/2) * jumpSpeed * 0.8 - jumpSpeed;
+                } else {
+                    player.vx += player.angularVelocity * Math.cos(player.angle) * 10;
+                    player.vy += player.angularVelocity * Math.sin(player.angle) * 10 - player.jumpPower;
+                }
+                
+            } else if (player.y >= canvas.height - player.height - 5) {
+                player.vy = -player.jumpPower;
+            }
+        }
+        
+        function updateDiddyKongImage() {
+            diddyImg.style.display = debugVisuals ? 'none' : 'block';
+            
+            if (!debugVisuals) {
+                diddyImg.style.width = diddyConfig.width + 'px';
+                diddyImg.style.height = diddyConfig.height + 'px';
+                
+                const canvasRect = canvas.getBoundingClientRect();
+                
+                const imgX = canvasRect.left + player.x - diddyConfig.width / 2;
+                const imgY = canvasRect.top + player.y - diddyConfig.height / 2;
+                
+                const angleDegrees = (player.angle * 180 / Math.PI);
+                
+                diddyImg.style.left = imgX + 'px';
+                diddyImg.style.top = imgY + 'px';
+                diddyImg.style.transform = `rotate(${angleDegrees}deg)`;
+            }
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            updateHandPositions();
+            
+            ctx.fillStyle = '#8B4513';
+            for (let wall of walls) {
+                ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
+                
+                ctx.strokeStyle = '#654321';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < wall.height; i += 10) {
+                    ctx.beginPath();
+                    ctx.moveTo(wall.x, wall.y + i);
+                    ctx.lineTo(wall.x + wall.width, wall.y + i);
+                    ctx.stroke();
+                }
+            }
+            
+            if (debugVisuals) {
+                ctx.save();
+                ctx.translate(player.x, player.y);
+                ctx.rotate(player.angle);
+                
+                ctx.fillStyle = '#FF6B35';
+                ctx.beginPath();
+                ctx.arc(0, -player.height/2 + player.width/2, player.width/2, Math.PI, 0, false);
+                ctx.lineTo(player.width/2, player.height/2 - player.width/2);
+                ctx.arc(0, player.height/2 - player.width/2, player.width/2, 0, Math.PI, false);
+                ctx.lineTo(-player.width/2, -player.height/2 + player.width/2);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(-4, -8, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(4, -8, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(0, -2, 3, 0, Math.PI, false);
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+            
+            if (debugVisuals) {
+                ctx.fillStyle = player.leftHand.grabbing ? '#FF0000' : '#FFB84D';
+                ctx.beginPath();
+                ctx.arc(player.leftHand.x, player.leftHand.y, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                ctx.fillStyle = player.rightHand.grabbing ? '#FF0000' : '#FFB84D';
+                ctx.beginPath();
+                ctx.arc(player.rightHand.x, player.rightHand.y, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+            
+            if (debugVisuals && (Math.abs(player.vx) > 1 || Math.abs(player.vy) > 1)) {
+                ctx.strokeStyle = '#FF00FF';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(player.x, player.y);
+                ctx.lineTo(player.x + player.vx * 5, player.y + player.vy * 5);
+                ctx.stroke();
+            }
+            
+            if (debugVisuals && (player.leftHand.grabbing || player.rightHand.grabbing) && Math.abs(player.angularVelocity) > 0.01) {
+                const speed = 15;
+                let trajectoryVx, trajectoryVy;
+                
+                if (player.leftHand.grabbing && !player.rightHand.grabbing) {
+                    trajectoryVx = Math.cos(player.angle + Math.PI/2) * speed * Math.sign(player.angularVelocity);
+                    trajectoryVy = Math.sin(player.angle + Math.PI/2) * speed * Math.sign(player.angularVelocity) - 5;
+                } else if (player.rightHand.grabbing && !player.leftHand.grabbing) {
+                    trajectoryVx = Math.cos(player.angle - Math.PI/2) * speed * Math.sign(player.angularVelocity);
+                    trajectoryVy = Math.sin(player.angle - Math.PI/2) * speed * Math.sign(player.angularVelocity) - 5;
+                } else {
+                    trajectoryVx = Math.cos(player.angle + Math.PI/2) * speed * Math.sign(player.angularVelocity);
+                    trajectoryVy = Math.sin(player.angle + Math.PI/2) * speed * Math.sign(player.angularVelocity) - 5;
+                }
+                
+                ctx.strokeStyle = '#FFFF00';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(player.x, player.y);
+                ctx.lineTo(player.x + trajectoryVx * 3, player.y + trajectoryVy * 3);
+                ctx.stroke();
+                
+                const arrowLength = 10;
+                const arrowAngle = Math.atan2(trajectoryVy, trajectoryVx);
+                const endX = player.x + trajectoryVx * 3;
+                const endY = player.y + trajectoryVy * 3;
+                
+                ctx.beginPath();
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(endX - arrowLength * Math.cos(arrowAngle - Math.PI/6), 
+                          endY - arrowLength * Math.sin(arrowAngle - Math.PI/6));
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(endX - arrowLength * Math.cos(arrowAngle + Math.PI/6), 
+                          endY - arrowLength * Math.sin(arrowAngle + Math.PI/6));
+                ctx.stroke();
+            }
+            
+            if (debugVisuals && player.leftHand.grabbing && player.leftHand.grabPoint) {
+                ctx.fillStyle = '#00FF00';
+                ctx.beginPath();
+                ctx.arc(player.leftHand.grabPoint.x, player.leftHand.grabPoint.y, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(player.leftHand.grabPoint.x, player.leftHand.grabPoint.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#00FF00';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(player.leftHand.x, player.leftHand.y);
+                ctx.lineTo(player.leftHand.grabPoint.x, player.leftHand.grabPoint.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            
+            if (debugVisuals && player.rightHand.grabbing && player.rightHand.grabPoint) {
+                ctx.fillStyle = '#0080FF';
+                ctx.beginPath();
+                ctx.arc(player.rightHand.grabPoint.x, player.rightHand.grabPoint.y, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(player.rightHand.grabPoint.x, player.rightHand.grabPoint.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#0080FF';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(player.rightHand.x, player.rightHand.y);
+                ctx.lineTo(player.rightHand.grabPoint.x, player.rightHand.grabPoint.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+        
+        function gameLoop() {
+            handleGrabbing();
+            updatePhysics();
+            updateDiddyKongImage();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        gameLoop();
+    </script>
+</body>
+</html>

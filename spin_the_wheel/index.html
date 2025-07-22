@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WheelTime</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        #wheel-container {
+            position: relative;
+        }
+        #arrow {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+        }
+        #spin-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1em;
+        }
+        #result{
+            font-size: 2em;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: whitesmoke;
+        }
+        #wheel {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid #000;
+        }
+        .wheel-segment {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: 100% 100%;
+            background-color: #FFDDC1;
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0);
+        }
+        .wheel-segment:nth-child(even) {
+            background-color: #FFABAB;
+        }
+        .wheel-segment span {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(90deg);
+            transform-origin: 0 0;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <div id="wheel-container">
+        <div id="arrow">▼</div>
+        <div id="wheel"></div>
+        <button id="spin-button">Spin</button>
+    </div>
+    <div id="result"></div>
+
+    <script>
+        const items = ["Prize 1", "Prize 2", "Prize 3", "Prize 4", "Prize 5", "Prize 6"];
+        const wheel = document.getElementById('wheel');
+        const spinButton = document.getElementById('spin-button');
+        const resultDiv = document.getElementById('result');
+        let isDragging = false;
+        let startAngle = 0;
+        let currentAngle = 0;
+        let spinVelocity = 0;
+        let lastMouseY = 0;
+
+        function createWheel() {
+            const numItems = items.length;
+            const arcSize = 360 / numItems;
+            for (let i = 0; i < numItems; i++) {
+                const segment = document.createElement('div');
+                segment.classList.add('wheel-segment');
+                segment.style.transform = `rotate(${i * arcSize}deg)`;
+                const span = document.createElement('span');
+                span.textContent = items[i];
+                segment.appendChild(span);
+                wheel.appendChild(segment);
+            }
+        }
+
+        function updateWheel() {
+            wheel.style.transform = `rotate(${currentAngle}deg)`;
+        }
+
+        function spinWheel() {
+            if (spinVelocity !== 0) {
+                currentAngle += spinVelocity;
+                spinVelocity *= 0.98; // friction
+                if (Math.abs(spinVelocity) < 0.001) {
+                    spinVelocity = 0;
+                    const selectedItem = items[Math.floor(((currentAngle % 360) + 360) % 360 / (360 / items.length))];
+                    resultDiv.textContent = `Result: ${selectedItem}`;
+                }
+                updateWheel();
+                requestAnimationFrame(spinWheel);
+            }
+        }
+
+        wheel.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startAngle = currentAngle;
+            lastMouseY = e.clientY;
+        });
+
+        wheel.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaY = e.clientY - lastMouseY;
+                currentAngle = startAngle + deltaY * 0.5;
+                updateWheel();
+            }
+        });
+
+        wheel.addEventListener('mouseup', (e) => {
+            if (isDragging) {
+                isDragging = false;
+                const deltaY = e.clientY - lastMouseY;
+                spinVelocity = deltaY * 0.5;
+                spinWheel();
+            }
+        });
+
+        wheel.addEventListener('mouseleave', (e) => {
+            if (isDragging) {
+                isDragging = false;
+                const deltaY = e.clientY - lastMouseY;
+                spinVelocity = deltaY * 0.5;
+                spinWheel();
+            }
+        });
+
+        spinButton.addEventListener('click', () => {
+            spinVelocity = Math.random() * 20 + 10;
+            spinWheel();
+        });
+
+        createWheel();
+        updateWheel();
+    </script>
+</body>
+</html>
