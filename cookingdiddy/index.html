@@ -1,0 +1,1285 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cooking Diddy - Minigame Collection</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="text-variations.js"></script>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Main Menu -->
+        <div class="screen active main-menu" id="mainMenu">
+            <div class="main-menu">
+                <h1 class="title">🍌 COOKING DIDDY 🍌</h1>
+                <p class="subtitle">Kitchen Bananza</p>
+                <div class="diddy-char"></div>
+                <div class="menu-grid">
+                    <button class="menu-item" onclick="showTutorial('bananaSlice')">
+                        🍌 Banana Rhythm Slice<br><small>Slice to the beat!</small>
+                    </button>
+                    <button class="menu-item" onclick="showTutorial('smoothieMix')">
+                        🥤 Smoothie Recipe Match<br><small>Follow the exact recipe!</small>
+                    </button>
+                    <button class="menu-item" onclick="showTutorial('pancakeFlip')">
+                        🥞 Pancake Tower Stack<br><small>Build the highest tower!</small>
+                    </button>
+                    <button class="menu-item" onclick="showTutorial('bananaBread')">
+                        🍞 Temperature Control<br><small>Keep perfect heat!</small>
+                    </button>
+                    <button class="menu-item" onclick="showTutorial('soupStir')">
+                        🍲 Ingredient Catch<br><small>Catch falling ingredients!</small>
+                    </button>
+                    <button class="menu-item" onclick="showTutorial('saladChop')">
+                        🥗 Precision Chopping<br><small>Chop at exact timing!</small>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="screen" id="gameScreen">
+            <div class="game-screen">
+                <button class="back-btn" onclick="goToMenu()">← Back to Menu</button>
+                <div class="game-header">
+                    <div class="score">Score: <span id="score">0</span></div>
+                    <div class="timer">Time: <span id="timer">30</span>s</div>
+                </div>
+                <div class="game-area" id="gameArea">
+                    <!-- Game content will be dynamically loaded here -->
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div class="screen" id="resultScreen">
+            <div class="result-screen">
+                <h2 class="result-title">🎉 Game Complete! 🎉</h2>
+                <div class="final-score">Final Score: <span id="finalScore">0</span></div>
+                <div id="ratingMessage"></div>
+                <button class="play-again-btn" onclick="goToMenu()">Play Again</button>
+            </div>
+        </div>
+
+        <!-- Tutorial Screen -->
+        <div class="screen" id="tutorialScreen">
+            <div class="tutorial-screen">
+                <button class="back-btn" onclick="goToMenu()">← Back to Menu</button>
+                <h2 id="tutorialTitle">How to Play</h2>
+                <div id="tutorialContent"></div>
+                <button class="start-game-btn" id="startGameBtn" onclick="startGameFromTutorial()">Start Game!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentGame = '';
+        let score = 0;
+        let timeLeft = 30;
+        let gameTimer = null;
+        let gameActive = false;
+
+        // Ensure functions are available (fallback if external script fails)
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof getRandomText === 'undefined') {
+                window.getRandomText = function(category) {
+                    const fallbacks = {
+                        'bananaSliceTitle': 'Slice bananas when they hit the line!',
+                        'perfectHit': '✨ PERFECT! ✨',
+                        'greatHit': '⭐ GREAT! ⭐',
+                        'miss': '❌ MISS! ❌',
+                        'breadRaw': 'Raw',
+                        'breadBaking': 'Baking...',
+                        'breadAlmostDone': 'Almost done!',
+                        'breadPerfect': 'Perfect!',
+                        'streakPrompt': 'Streak:'
+                    };
+                    return fallbacks[category] || `[${category}]`;
+                };
+                
+                window.getRandomRating = function(score) {
+                    if (score >= 150) return "🌟🌟🌟 AMAZING! Diddy is proud!";
+                    else if (score >= 100) return "🌟🌟 Great job! Getting better!";
+                    else if (score >= 50) return "🌟 Not bad! Keep practicing!";
+                    else return "😅 Need more practice!";
+                };
+                console.warn('Using fallback text functions - external script may not have loaded');
+            }
+        });
+
+        // Screen management
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            const targetScreen = document.getElementById(screenId);
+            targetScreen.classList.add('active');
+            
+            // Add main-menu class only for main menu
+            if (screenId === 'mainMenu') {
+                targetScreen.classList.add('main-menu');
+            } else {
+                targetScreen.classList.remove('main-menu');
+            }
+        }
+
+        function goToMenu() {
+            showScreen('mainMenu');
+            resetGame();
+        }
+
+        // Tutorial system
+        let currentTutorialGame = '';
+        
+        function showTutorial(gameType) {
+            currentTutorialGame = gameType;
+            showScreen('tutorialScreen');
+            
+            const tutorials = {
+                bananaSlice: {
+                    title: "🍌 Banana Rhythm Slice",
+                    content: `
+                        <div style="text-align: left;">
+                            <h3>🎵 How to Play:</h3>
+                            <p>• Bananas will fall from the top in rhythm with the music</p>
+                            <p>• Click on bananas when they reach the golden rhythm line</p>
+                            <p>• Time your clicks to the beat for perfect scores!</p>
+                            <p>• Build combos for bonus points</p>
+                            <br>
+                            <h3>🎯 Scoring:</h3>
+                            <p>• Perfect timing: 20+ points (increases with combo)</p>
+                            <p>• Good timing: 10 points</p>
+                            <p>• Miss: -5 points and combo resets</p>
+                        </div>
+                    `
+                },
+                smoothieMix: {
+                    title: "🥤 Smoothie Recipe Match",
+                    content: `
+                        <div style="text-align: left;">
+                            <h3>🧪 How to Play:</h3>
+                            <p>• Follow the exact recipe shown on the left</p>
+                            <p>• Click ingredient buttons to add them to your mix</p>
+                            <p>• Order and ingredients must match exactly</p>
+                            <p>• Press "Blend!" when ready to submit</p>
+                            <p>• Use "Clear" to start over</p>
+                            <br>
+                            <h3>🎯 Scoring:</h3>
+                            <p>• Perfect match: +50 points</p>
+                            <p>• Wrong recipe: -10 points</p>
+                        </div>
+                    `
+                },
+                pancakeFlip: {
+                    title: "🥞 Pancake Tower Stack",
+                    content: `
+                        <div style="text-align: left;">
+                            <h3>🏗️ How to Play:</h3>
+                            <p>• Watch the pancake move left and right</p>
+                            <p>• Click ANYWHERE to drop the pancake</p>
+                            <p>• Try to align perfectly with the previous pancake</p>
+                            <p>• Poor alignment reduces the next pancake's size</p>
+                            <p>• Tower may lean as it gets taller!</p>
+                            <br>
+                            <h3>🎯 Scoring:</h3>
+                            <p>• Perfect alignment: 20+ points (bonus for height)</p>
+                            <p>• Poor alignment: +5 points but smaller pancakes</p>
+                            <p>• Too much overhang: -20 points and game over</p>
+                        </div>
+                    `
+                },
+                bananaBread: {
+                    title: "🍞 Temperature Control",
+                    content: `
+                        <div style="text-align: left;">
+                            <h3>🔥 How to Play:</h3>
+                            <p>• Use Heat Up and Cool Down buttons to control oven temperature</p>
+                            <p>• Keep the mercury in the green target zone</p>
+                            <p>• Watch the bread progress from Raw → Baking → Perfect</p>
+                            <p>• Don't let it burn by overheating!</p>
+                            <br>
+                            <h3>🎯 Scoring:</h3>
+                            <p>• Stay in target zone: +2 points per second</p>
+                            <p>• Perfect bread: +100 points bonus</p>
+                            <p>• Burnt bread: Game over!</p>
+                        </div>
+                    `
+                },
+                soupStir: {
+                    title: "🍲 Ingredient Catch",
+                    content: `
+                        <div style="text-align: left;">
+                            <h3>🥄 How to Play:</h3>
+                            <p>• Move your mouse to control the pot left and right</p>
+                            <p>• Catch only the ingredients shown in "Catch:"</p>
+                            <p>• Avoid the bad ingredients (bones, spiders, etc.)</p>
+                            <p>• You have 3 lives - lose one for each bad ingredient caught</p>
+                            <p>• Ingredients fall faster as time goes on!</p>
+                            <br>
+                            <h3>🎯 Scoring:</h3>
+                            <p>• Good ingredient: +10 points</p>
+                            <p>• Bad ingredient: -1 life</p>
+                            <p>• Complete recipe: Big bonus!</p>
+                        </div>
+                    `
+                },
+                saladChop: {
+                    title: "🥗 Precision Chopping",
+                    content: `
+                        <div style="text-align: left;">
+                            <h3>🔪 How to Play:</h3>
+                            <p>• Watch the blade move left and right across the cutting board</p>
+                            <p>• Press SPACEBAR when the blade is over the green vegetable zone</p>
+                            <p>• Perfect hits increase the blade speed</p>
+                            <p>• Missing slows the blade down</p>
+                            <p>• Build streaks for maximum points!</p>
+                            <br>
+                            <h3>🎯 Scoring:</h3>
+                            <p>• Perfect timing: High points + speed increase</p>
+                            <p>• Good timing: Medium points</p>
+                            <p>• Miss: Low points + speed decrease</p>
+                        </div>
+                    `
+                }
+            };
+            
+            const tutorial = tutorials[gameType];
+            document.getElementById('tutorialTitle').textContent = tutorial.title;
+            document.getElementById('tutorialContent').innerHTML = tutorial.content;
+        }
+        
+        function startGameFromTutorial() {
+            startGame(currentTutorialGame);
+        }
+
+        function resetGame() {
+            if (gameTimer) clearInterval(gameTimer);
+            score = 0;
+            timeLeft = 30;
+            gameActive = false;
+            document.getElementById('gameArea').innerHTML = '';
+            // Clear any existing intervals
+            if (window.gameIntervals) {
+                window.gameIntervals.forEach(interval => clearInterval(interval));
+                window.gameIntervals = [];
+            }
+            window.gameIntervals = [];
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('timer').textContent = timeLeft;
+            document.getElementById('progressFill').style.width = ((30 - timeLeft) / 30 * 100) + '%';
+        }
+
+        function startGame(gameType) {
+            currentGame = gameType;
+            showScreen('gameScreen');
+            resetGame();
+            gameActive = true;
+            updateDisplay();
+
+            // Start timer
+            gameTimer = setInterval(() => {
+                timeLeft--;
+                updateDisplay();
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+
+            // Load specific game
+            switch(gameType) {
+                case 'bananaSlice': loadBananaSliceGame(); break;
+                case 'smoothieMix': loadSmoothieMixGame(); break;
+                case 'pancakeFlip': loadPancakeFlipGame(); break;
+                case 'bananaBread': loadBananaBreadGame(); break;
+                case 'soupStir': loadSoupStirGame(); break;
+                case 'saladChop': loadSaladChopGame(); break;
+            }
+        }
+
+        function endGame() {
+            gameActive = false;
+            if (gameTimer) clearInterval(gameTimer);
+            
+            document.getElementById('finalScore').textContent = score;
+            
+            let rating;
+            try {
+                rating = getRandomRating(score);
+            } catch (error) {
+                console.error('Error getting rating:', error);
+                // Fallback rating system
+                if (score >= 150) rating = "🌟🌟🌟 AMAZING! Diddy is proud!";
+                else if (score >= 100) rating = "🌟🌟 Great job! Getting better!";
+                else if (score >= 50) rating = "🌟 Not bad! Keep practicing!";
+                else rating = "😅 Need more practice!";
+            }
+            
+            document.getElementById('ratingMessage').innerHTML = `<p style="font-size: 1.5rem; margin: 20px 0;">${rating}</p>`;
+            
+            setTimeout(() => {
+                showScreen('resultScreen');
+            }, 1000);
+        }
+
+        function addScore(points) {
+            if (gameActive) {
+                score += points;
+                updateDisplay();
+            }
+        }
+
+        // Game 1: Banana Rhythm Slice
+        function loadBananaSliceGame() {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = `
+                <h3 style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #333;">${getRandomText('bananaSliceTitle')}</h3>
+                <div id="rhythmLine" style="position: absolute; top: 60%; left: 10%; right: 10%; height: 4px; background: #FFD700; box-shadow: 0 0 10px #FFD700;"></div>
+                <div id="beatIndicator" style="position: absolute; top: 58%; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; background: radial-gradient(circle, #FF6B35, #F7931E); border-radius: 50%; opacity: 0.7;"></div>
+                <div id="combo" style="position: absolute; top: 10%; right: 10%; font-size: 2rem; color: #FFD700; font-weight: bold;">Combo: 0</div>
+                <div id="musicNote" style="position: absolute; top: 15%; left: 10%; font-size: 2rem; animation: pulse 0.8s infinite;">🎵</div>
+            `;
+            
+            let combo = 0;
+            let beatInterval = 800; // milliseconds
+            let bananas = [];
+            
+            // Add music rhythm sound (using Web Audio API for beat sounds)
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            const playBeat = () => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            };
+            
+            // Create rhythm beat visual and audio
+            const beatIndicator = document.getElementById('beatIndicator');
+            const beatTimer = setInterval(() => {
+                if (gameActive) {
+                    beatIndicator.style.transform = 'translateX(-50%) scale(1.5)';
+                    try {
+                        playBeat();
+                    } catch(e) {
+                        // Audio might not be available
+                    }
+                    setTimeout(() => {
+                        beatIndicator.style.transform = 'translateX(-50%) scale(1)';
+                    }, 100);
+                }
+            }, beatInterval);
+            window.gameIntervals.push(beatTimer);
+            
+            // Spawn bananas from different lanes
+            const spawnBanana = () => {
+                if (!gameActive) return;
+                
+                const gameArea = document.getElementById('gameArea');
+                const banana = document.createElement('div');
+                const lane = Math.floor(Math.random() * 4); // 4 lanes
+                
+                banana.className = 'rhythm-banana';
+                banana.style.position = 'absolute';
+                banana.style.width = '60px';
+                banana.style.height = '60px';
+                banana.style.left = (20 + lane * 20) + '%';
+                banana.style.top = '10%'; // Start from top, not 20%
+                banana.style.fontSize = '40px';
+                banana.style.display = 'flex';
+                banana.style.alignItems = 'center';
+                banana.style.justifyContent = 'center';
+                banana.style.cursor = 'pointer';
+                banana.style.transition = 'top 2s linear';
+                banana.innerHTML = '🍌';
+                
+                let sliced = false;
+                
+                banana.onclick = () => {
+                    if (sliced) return;
+                    
+                    const bananaRect = banana.getBoundingClientRect();
+                    const lineRect = document.getElementById('rhythmLine').getBoundingClientRect();
+                    const distance = Math.abs(bananaRect.bottom - lineRect.top);
+                    
+                    if (distance < 50) {
+                        // Perfect hit!
+                        combo++;
+                        addScore(20 + combo * 2);
+                        banana.innerHTML = getRandomText('perfectHit');
+                        banana.style.color = '#FFD700';
+                        banana.style.fontSize = '20px';
+                    } else if (distance < 100) {
+                        // Good hit
+                        combo = Math.max(0, combo - 1);
+                        addScore(10);
+                        banana.innerHTML = getRandomText('greatHit');
+                        banana.style.fontSize = '20px';
+                    } else {
+                        // Miss
+                        combo = 0;
+                        addScore(-5);
+                        banana.innerHTML = getRandomText('miss');
+                        banana.style.color = '#FF4444';
+                        banana.style.fontSize = '20px';
+                    }
+                    
+                    document.getElementById('combo').textContent = `Combo: ${combo}`;
+                    sliced = true;
+                    setTimeout(() => banana.remove(), 200);
+                };
+                
+                gameArea.appendChild(banana);
+                
+                // Animate banana falling from top to rhythm line
+                setTimeout(() => {
+                    banana.style.top = '58%'; // Fall to just before the rhythm line
+                }, 10);
+                
+                // Check if banana passes the line without being sliced
+                setTimeout(() => {
+                    if (banana.parentNode && !sliced) {
+                        const bananaRect = banana.getBoundingClientRect();
+                        const lineRect = document.getElementById('rhythmLine').getBoundingClientRect();
+                        
+                        // If banana has passed the line area, it's a miss
+                        if (bananaRect.top > lineRect.bottom + 20) {
+                            combo = 0;
+                            document.getElementById('combo').textContent = `Combo: ${combo}`;
+                            banana.remove();
+                        }
+                    }
+                }, 2000);
+                
+                // Final cleanup
+                setTimeout(() => {
+                    if (banana.parentNode && !sliced) {
+                        combo = 0;
+                        document.getElementById('combo').textContent = `Combo: ${combo}`;
+                        banana.remove();
+                    }
+                }, 2500);
+            };
+            
+            const interval = setInterval(spawnBanana, beatInterval);
+            window.gameIntervals.push(interval);
+        }
+
+        // Game 2: Smoothie Recipe Match
+        function loadSmoothieMixGame() {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = `
+                <h3 style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #333;">Follow the recipe exactly!</h3>
+                <div id="recipe" style="position: absolute; top: 15%; left: 10%; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 10px; font-size: 1.2rem; font-weight: bold;"></div>
+                <div id="currentMix" style="position: absolute; top: 15%; right: 10%; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 10px; font-size: 1.2rem;"><span id="mixLabel">Your Mix:</span> <span id="mixContents"></span></div>
+                <div class="bowl"></div>
+                <div id="ingredientShelf" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px;"></div>
+                <button id="blendButton" style="position: absolute; bottom: 20px; right: 20px; padding: 10px 20px; font-size: 1.1rem; background: #4CAF50; color: white; border: none; border-radius: 10px; cursor: pointer;">Blend!</button>
+            `;
+            
+            const recipes = [
+                ['🫐', '🍓', '🥝'],
+                ['🍓', '🫐', '🍌'],
+                ['🥝', '🍌', '🫐'],
+                ['🫐', '🍓', '🥝'],
+                ['🍌', '🥝', '🍓']
+            ];
+            
+            let currentRecipe = [];
+            let playerMix = [];
+            let recipeIndex = 0;
+            
+            const ingredients = [
+                {emoji: '🍓', name: 'Strawberry'},
+                {emoji: '🍌', name: 'Banana'},
+                {emoji: '🥝', name: 'Kiwi'},
+                {emoji: '🫐', name: 'Blueberry'}
+            ];
+            
+            const startNewRecipe = () => {
+                currentRecipe = [...recipes[recipeIndex % recipes.length]];
+                recipeIndex++;
+                playerMix = [];
+                
+                document.getElementById('recipe').innerHTML = `Recipe: ${currentRecipe.join(' + ')}`;
+                document.getElementById('mixContents').textContent = playerMix.join(' + ') || 'Empty';
+                
+                // Create ingredient buttons
+                const shelf = document.getElementById('ingredientShelf');
+                shelf.innerHTML = '';
+                ingredients.forEach(ingredient => {
+                    const btn = document.createElement('button');
+                    btn.innerHTML = ingredient.emoji;
+                    btn.style.fontSize = '2rem';
+                    btn.style.padding = '10px';
+                    btn.style.border = 'none';
+                    btn.style.borderRadius = '10px';
+                    btn.style.cursor = 'pointer';
+                    btn.style.background = '#FFE066';
+                    btn.onclick = () => {
+                        if (playerMix.length < 3) {
+                            playerMix.push(ingredient.emoji);
+                            document.getElementById('mixContents').textContent = playerMix.join(' + ');
+                        }
+                    };
+                    shelf.appendChild(btn);
+                });
+            };
+            
+            document.getElementById('blendButton').onclick = () => {
+                const correct = JSON.stringify(playerMix) === JSON.stringify(currentRecipe);
+                if (correct) {
+                    addScore(50);
+                    // Success animation
+                    document.getElementById('currentMix').style.background = 'rgba(76, 175, 80, 0.9)';
+                    setTimeout(() => {
+                        document.getElementById('currentMix').style.background = 'rgba(255,255,255,0.9)';
+                        startNewRecipe();
+                    }, 1000);
+                } else {
+                    addScore(-10);
+                    // Error animation
+                    document.getElementById('currentMix').style.background = 'rgba(244, 67, 54, 0.9)';
+                    setTimeout(() => {
+                        document.getElementById('currentMix').style.background = 'rgba(255,255,255,0.9)';
+                        playerMix = [];
+                        document.getElementById('mixContents').textContent = 'Empty';
+                    }, 1000);
+                }
+            };
+            
+            // Add clear button
+            const clearBtn = document.createElement('button');
+            clearBtn.textContent = 'Clear';
+            clearBtn.style.position = 'absolute';
+            clearBtn.style.bottom = '60px';
+            clearBtn.style.right = '20px';
+            clearBtn.style.padding = '5px 15px';
+            clearBtn.style.background = '#FF9800';
+            clearBtn.style.color = 'white';
+            clearBtn.style.border = 'none';
+            clearBtn.style.borderRadius = '5px';
+            clearBtn.style.cursor = 'pointer';
+            clearBtn.onclick = () => {
+                playerMix = [];
+                document.getElementById('mixContents').textContent = 'Empty';
+            };
+            gameArea.appendChild(clearBtn);
+            
+            startNewRecipe();
+        }
+
+        // Game 3: Pancake Tower Stack
+        function loadPancakeFlipGame() {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = `
+                <h3 style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #333;">Stack pancakes as high as possible!</h3>
+                <div id="tower" style="position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%); width: 200px; height: 400px; display: flex; flex-direction: column-reverse; align-items: center;"></div>
+                <div id="fallingPancake" style="position: absolute; top: 80px; left: 50%; transform: translateX(-50%); width: 100px; height: 20px; background: radial-gradient(circle, #DEB887, #CD853F); border-radius: 50px; font-size: 60px; display: flex; align-items: center; justify-content: center;">🥞</div>
+                <div id="towerHeight" style="position: absolute; top: 10%; right: 10%; font-size: 1.5rem; color: #333; font-weight: bold;">Height: 0</div>
+            `;
+            
+            let towerHeight = 0;
+            let currentPancake = null;
+            let pancakeSpeed = 0.5; // Start slower
+            let direction = 1;
+            let pancakeWidth = 100;
+            
+            const tower = document.getElementById('tower');
+            const heightDisplay = document.getElementById('towerHeight');
+            
+            const createMovingPancake = () => {
+                if (!gameActive) return;
+                
+                currentPancake = document.getElementById('fallingPancake');
+                currentPancake.style.width = pancakeWidth + 'px';
+                currentPancake.style.left = '10%';
+                direction = 1;
+                
+                const movePancake = () => {
+                    if (!gameActive || !currentPancake) return;
+                    
+                    const currentLeft = parseFloat(currentPancake.style.left);
+                    const newLeft = currentLeft + (pancakeSpeed * direction);
+                    
+                    if (newLeft >= 80 || newLeft <= 10) {
+                        direction *= -1;
+                    }
+                    
+                    currentPancake.style.left = newLeft + '%';
+                    
+                    if (gameActive) {
+                        requestAnimationFrame(movePancake);
+                    }
+                };
+                
+                movePancake();
+            };
+            
+            const dropPancake = () => {
+                if (!currentPancake || !gameActive) return;
+                
+                const pancakeLeft = parseFloat(currentPancake.style.left);
+                let stackSuccess = true;
+                let overhang = 0;
+                
+                // Check alignment with previous pancake
+                if (towerHeight > 0) {
+                    const lastPancake = tower.lastElementChild;
+                    const lastPancakeLeft = parseFloat(lastPancake.style.left || '50');
+                    overhang = Math.abs(pancakeLeft - lastPancakeLeft);
+                    
+                    if (overhang > 15) {
+                        // Too much overhang - game over or penalty
+                        if (overhang > 30) {
+                            addScore(-20);
+                            endGame();
+                            return;
+                        } else {
+                            // Reduce pancake width based on overhang
+                            pancakeWidth = Math.max(40, pancakeWidth - overhang);
+                            addScore(5);
+                        }
+                    } else {
+                        // Good alignment!
+                        addScore(20 + towerHeight * 2);
+                    }
+                } else {
+                    addScore(10);
+                }
+                
+                // Add pancake to tower
+                const stackedPancake = document.createElement('div');
+                stackedPancake.style.width = pancakeWidth + 'px';
+                stackedPancake.style.height = '20px';
+                stackedPancake.style.background = 'radial-gradient(circle, #DEB887, #CD853F)';
+                stackedPancake.style.borderRadius = '50px';
+                stackedPancake.style.marginBottom = '2px';
+                stackedPancake.style.position = 'relative';
+                stackedPancake.style.left = (pancakeLeft - 50) + '%';
+                stackedPancake.innerHTML = '🥞';
+                stackedPancake.style.fontSize = '15px';
+                stackedPancake.style.display = 'flex';
+                stackedPancake.style.alignItems = 'center';
+                stackedPancake.style.justifyContent = 'center';
+                
+                tower.appendChild(stackedPancake);
+                towerHeight++;
+                heightDisplay.textContent = `Height: ${towerHeight}`;
+                
+                // Increase difficulty
+                // Gradually increase speed and add slight physics
+                pancakeSpeed = Math.min(2.5, pancakeSpeed + 0.02); // Much slower buildup, lower max speed
+                
+                // Add tower leaning physics
+                if (towerHeight > 3) {
+                    const towerLean = Math.random() * 0.5 - 0.25; // Small random lean
+                    tower.style.transform = `translateX(-50%) rotate(${towerLean}deg)`;
+                }
+                
+                // Create next pancake
+                setTimeout(() => {
+                    if (gameActive) {
+                        createMovingPancake();
+                    }
+                }, 500);
+            };
+            
+            // Click to drop pancake
+            gameArea.onclick = dropPancake;
+            
+            createMovingPancake();
+        }
+
+        // Game 4: Temperature Control
+        function loadBananaBreadGame() {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = `
+                <h3 style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #333;">Keep the temperature in the green zone!</h3>
+                <div id="thermometer" style="position: absolute; left: 20%; top: 30%; width: 30px; height: 300px; background: #DDD; border-radius: 15px; border: 3px solid #333;">
+                    <div id="tempMercury" style="width: 100%; background: linear-gradient(to top, #FF4444, #FFFF44, #44FF44); border-radius: 12px; position: absolute; bottom: 0; height: 50%; transition: height 0.3s;"></div>
+                </div>
+                <div id="targetZone" style="position: absolute; left: 18%; top: 45%; width: 34px; height: 60px; border: 3px solid #00FF00; background: rgba(0,255,0,0.2); border-radius: 5px;"></div>
+                <div id="tempDisplay" style="position: absolute; left: 25%; top: 25%; font-size: 1.2rem; font-weight: bold;">Temperature: <span id="tempValue">200</span>°F</div>
+                <div class="oven" style="position: absolute; right: 20%; top: 35%;">
+                    <div class="oven-door" id="ovenDoor">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 40px;">🍞</div>
+                    </div>
+                </div>
+                <div id="controls" style="position: absolute; bottom: 20%; left: 50%; transform: translateX(-50%); display: flex; gap: 20px;">
+                    <button id="heatUp" style="padding: 15px 25px; font-size: 1.5rem; background: #FF6B35; color: white; border: none; border-radius: 10px; cursor: pointer;">🔥 Heat Up</button>
+                    <button id="coolDown" style="padding: 15px 25px; font-size: 1.5rem; background: #4FC3F7; color: white; border: none; border-radius: 10px; cursor: pointer;">❄️ Cool Down</button>
+                </div>
+                <div id="breadStatus" style="position: absolute; right: 15%; top: 25%; font-size: 1.2rem; font-weight: bold;">Bread: <span id="breadState">Raw</span></div>
+            `;
+            
+            let temperature = 200; // Starting temperature
+            let targetTemp = 350; // Target temperature
+            let breadProgress = 0; // 0-100
+            let inTargetZone = false;
+            let tempChangeRate = 5;
+            
+            const tempDisplay = document.getElementById('tempValue');
+            const tempMercury = document.getElementById('tempMercury');
+            const breadState = document.getElementById('breadState');
+            const targetZone = document.getElementById('targetZone');
+            
+            // Update target zone position based on target temperature
+            const updateTargetZone = () => {
+                const tempPercent = (targetTemp - 150) / 300; // Temp range 150-450
+                const zoneTop = 70 - (tempPercent * 60); // Invert for visual
+                targetZone.style.top = zoneTop + '%';
+            };
+            
+            const updateDisplay = () => {
+                tempDisplay.textContent = Math.round(temperature);
+                const tempPercent = Math.max(0, Math.min(100, (temperature - 150) / 300 * 100));
+                tempMercury.style.height = tempPercent + '%';
+                
+                // Check if in target zone (±25 degrees)
+                inTargetZone = Math.abs(temperature - targetTemp) <= 25;
+                
+                if (inTargetZone) {
+                    breadProgress = Math.min(100, breadProgress + 1);
+                    targetZone.style.background = 'rgba(0,255,0,0.5)';
+                } else {
+                    breadProgress = Math.max(0, breadProgress - 0.5);
+                    targetZone.style.background = 'rgba(255,0,0,0.3)';
+                }
+                
+                // Update bread state
+                if (breadProgress < 25) {
+                    breadState.textContent = getRandomText('breadRaw');
+                    breadState.style.color = '#FF4444';
+                } else if (breadProgress < 50) {
+                    breadState.textContent = getRandomText('breadBaking');
+                    breadState.style.color = '#FF8800';
+                } else if (breadProgress < 75) {
+                    breadState.textContent = getRandomText('breadAlmostDone');
+                    breadState.style.color = '#FFAA00';
+                } else if (breadProgress < 100) {
+                    breadState.textContent = getRandomText('breadPerfect');
+                    breadState.style.color = '#88FF00';
+                } else {
+                    breadState.textContent = getRandomText('breadPerfect');
+                    breadState.style.color = '#00FF00';
+                    addScore(100);
+                    // New target temperature
+                    targetTemp = 200 + Math.random() * 250;
+                    breadProgress = 0;
+                    updateTargetZone();
+                }
+                
+                // Score based on being in target zone
+                if (inTargetZone) {
+                    addScore(2);
+                }
+            };
+            
+            // Temperature naturally changes
+            const tempDrift = () => {
+                if (!gameActive) return;
+                
+                // Natural cooling and random fluctuations
+                temperature += (Math.random() - 0.6) * 3;
+                temperature = Math.max(150, Math.min(450, temperature));
+                updateDisplay();
+                
+                setTimeout(tempDrift, 200);
+            };
+            
+            // Controls - Fixed button handling
+            let heatInterval = null;
+            let coolInterval = null;
+            
+            const heatUpBtn = document.getElementById('heatUp');
+            const coolDownBtn = document.getElementById('coolDown');
+            
+            // Heat up button
+            heatUpBtn.addEventListener('mousedown', () => {
+                if (!gameActive || heatInterval) return;
+                heatInterval = setInterval(() => {
+                    if (gameActive) {
+                        temperature = Math.min(450, temperature + tempChangeRate);
+                        updateDisplay();
+                    }
+                }, 100);
+            });
+            
+            heatUpBtn.addEventListener('mouseup', () => {
+                if (heatInterval) {
+                    clearInterval(heatInterval);
+                    heatInterval = null;
+                }
+            });
+            
+            heatUpBtn.addEventListener('mouseleave', () => {
+                if (heatInterval) {
+                    clearInterval(heatInterval);
+                    heatInterval = null;
+                }
+            });
+            
+            // Cool down button
+            coolDownBtn.addEventListener('mousedown', () => {
+                if (!gameActive || coolInterval) return;
+                coolInterval = setInterval(() => {
+                    if (gameActive) {
+                        temperature = Math.max(150, temperature - tempChangeRate);
+                        updateDisplay();
+                    }
+                }, 100);
+            });
+            
+            coolDownBtn.addEventListener('mouseup', () => {
+                if (coolInterval) {
+                    clearInterval(coolInterval);
+                    coolInterval = null;
+                }
+            });
+            
+            coolDownBtn.addEventListener('mouseleave', () => {
+                if (coolInterval) {
+                    clearInterval(coolInterval);
+                    coolInterval = null;
+                }
+            });
+            
+            updateTargetZone();
+            tempDrift();
+        }
+
+        function startBaking() {
+            if (!gameActive) return;
+            
+            const ovenDoor = document.getElementById('ovenDoor');
+            let bakingTime = 0;
+            let isReady = false;
+            
+            const bakingTimer = setInterval(() => {
+                if (!gameActive) {
+                    clearInterval(bakingTimer);
+                    return;
+                }
+                
+                bakingTime++;
+                
+                if (bakingTime === 3) {
+                    ovenDoor.style.background = 'rgba(255,215,0,0.5)';
+                    isReady = true;
+                } else if (bakingTime === 6) {
+                    ovenDoor.style.background = 'rgba(139,69,19,0.7)';
+                    isReady = false;
+                }
+                
+                if (bakingTime >= 8) {
+                    bakingTime = 0;
+                    ovenDoor.style.background = 'rgba(255,140,0,0.3)';
+                    isReady = false;
+                }
+            }, 1000);
+            
+            ovenDoor.onclick = () => {
+                if (isReady) {
+                    addScore(25);
+                    ovenDoor.style.transform = 'scale(1.1)';
+                    setTimeout(() => ovenDoor.style.transform = 'scale(1)', 200);
+                } else {
+                    addScore(-10);
+                    ovenDoor.style.background = 'rgba(255,0,0,0.5)';
+                    setTimeout(() => ovenDoor.style.background = 'rgba(255,140,0,0.3)', 500);
+                }
+            };
+        }
+
+        // Game 5: Ingredient Catch
+        function loadSoupStirGame() {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = `
+                <h3 style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #333;">Catch the right ingredients! Avoid the bad ones!</h3>
+                <div id="catcher" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 120px; height: 60px; background: linear-gradient(180deg, #8D6E63, #5D4037); border-radius: 20px; border: 3px solid #3E2723; cursor: move;">
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem;">🥣</div>
+                </div>
+                <div id="recipe-display" style="position: absolute; top: 15%; left: 10%; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 10px; font-weight: bold;">
+                    Catch: <span id="target-ingredients"></span>
+                </div>
+                <div id="caught-display" style="position: absolute; top: 15%; right: 10%; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 10px; font-weight: bold;">
+                    Caught: <span id="caught-ingredients"></span>
+                </div>
+                <div id="lives" style="position: absolute; top: 30%; right: 10%; font-size: 1.5rem; color: #FF4444; font-weight: bold;">Lives: ❤️❤️❤️</div>
+            `;
+            
+            let catcher = document.getElementById('catcher');
+            let catcherPos = 50; // percentage from left
+            let lives = 3;
+            let currentTargets = [];
+            let caughtIngredients = [];
+            let fallingItems = [];
+            let spawnRate = 1500; // Start with slower spawn rate
+            let gameTime = 0;
+            
+            const goodIngredients = ['🥕', '🧅', '🥔', '🌶️', '🥬', '🍄'];
+            const badIngredients = ['🦴', '🕷️', '💀', '🤮', '🗑️', '🧻'];
+            
+            // Progressive difficulty - spawn rate increases over time
+            const difficultyTimer = setInterval(() => {
+                if (!gameActive) {
+                    clearInterval(difficultyTimer);
+                    return;
+                }
+                gameTime++;
+                // Decrease spawn rate every 5 seconds (make it faster)
+                if (gameTime % 5 === 0 && spawnRate > 600) {
+                    spawnRate -= 100;
+                }
+            }, 1000);
+            window.gameIntervals.push(difficultyTimer);
+            
+            const newTargets = () => {
+                currentTargets = [];
+                for (let i = 0; i < 3; i++) {
+                    currentTargets.push(goodIngredients[Math.floor(Math.random() * goodIngredients.length)]);
+                }
+                document.getElementById('target-ingredients').textContent = currentTargets.join(' ');
+                caughtIngredients = [];
+                document.getElementById('caught-ingredients').textContent = 'None';
+            };
+            
+            const updateLives = () => {
+                const hearts = '❤️'.repeat(lives) + '💔'.repeat(3 - lives);
+                document.getElementById('lives').innerHTML = `Lives: ${hearts}`;
+                if (lives <= 0) {
+                    endGame();
+                }
+            };
+            
+            // Catcher movement
+            const moveCatcher = (e) => {
+                const gameRect = gameArea.getBoundingClientRect();
+                const relativeX = e.clientX - gameRect.left;
+                catcherPos = Math.max(10, Math.min(90, (relativeX / gameRect.width) * 100));
+                catcher.style.left = catcherPos + '%';
+            };
+            
+            gameArea.addEventListener('mousemove', moveCatcher);
+            
+            // Spawn falling ingredients with progressive difficulty
+            const spawnIngredient = () => {
+                if (!gameActive) return;
+                
+                const isGood = Math.random() > 0.3; // 70% chance of good ingredient
+                const ingredients = isGood ? goodIngredients : badIngredients;
+                const ingredient = ingredients[Math.floor(Math.random() * ingredients.length)];
+                
+                const item = document.createElement('div');
+                item.style.position = 'absolute';
+                item.style.top = '5%'; // Start higher up, not at 10%
+                item.style.left = Math.random() * 85 + 5 + '%'; // Keep away from edges (5% to 90%)
+                item.style.fontSize = '3rem';
+                item.style.transition = `top ${3 + Math.random()}s linear`; // Slight speed variation
+                item.innerHTML = ingredient;
+                item.dataset.type = isGood ? 'good' : 'bad';
+                item.dataset.ingredient = ingredient;
+                
+                gameArea.appendChild(item);
+                fallingItems.push(item);
+                
+                // Start falling
+                setTimeout(() => {
+                    item.style.top = '90%'; // Fall to 90% instead of 95%
+                }, 10);
+                
+                // Check for catch
+                const checkCatch = () => {
+                    if (!gameActive || !item.parentNode) return;
+                    
+                    const itemRect = item.getBoundingClientRect();
+                    const catcherRect = catcher.getBoundingClientRect();
+                    
+                    // Check if caught
+                    if (itemRect.bottom >= catcherRect.top && 
+                        itemRect.left < catcherRect.right && 
+                        itemRect.right > catcherRect.left) {
+                        
+                        item.remove();
+                        
+                        if (item.dataset.type === 'good') {
+                            if (currentTargets.includes(item.dataset.ingredient)) {
+                                // Correct ingredient!
+                                addScore(20);
+                                caughtIngredients.push(item.dataset.ingredient);
+                                document.getElementById('caught-ingredients').textContent = caughtIngredients.join(' ');
+                                
+                                // Check if recipe complete
+                                const allCaught = currentTargets.every(target => 
+                                    caughtIngredients.filter(caught => caught === target).length >= 
+                                    currentTargets.filter(t => t === target).length
+                                );
+                                
+                                if (allCaught) {
+                                    addScore(50);
+                                    newTargets();
+                                }
+                            } else {
+                                // Wrong ingredient
+                                addScore(-5);
+                            }
+                        } else {
+                            // Bad ingredient!
+                            lives--;
+                            addScore(-15);
+                            updateLives();
+                            // Visual feedback
+                            catcher.style.background = 'linear-gradient(180deg, #FF4444, #CC0000)';
+                            setTimeout(() => {
+                                catcher.style.background = 'linear-gradient(180deg, #8D6E63, #5D4037)';
+                            }, 500);
+                        }
+                        return;
+                    }
+                    
+                    if (gameActive) {
+                        requestAnimationFrame(checkCatch);
+                    }
+                };
+                
+                requestAnimationFrame(checkCatch);
+                
+                // Remove if not caught
+                setTimeout(() => {
+                    if (item.parentNode) {
+                        item.remove();
+                        // Miss penalty for good ingredients
+                        if (item.dataset.type === 'good' && currentTargets.includes(item.dataset.ingredient)) {
+                            addScore(-10);
+                        }
+                    }
+                }, 3200);
+            };
+            
+            newTargets();
+            updateLives();
+            
+            // Progressive spawn rate
+            let spawnInterval;
+            const updateSpawnRate = () => {
+                if (!gameActive) return;
+                
+                if (spawnInterval) {
+                    clearInterval(spawnInterval);
+                    window.gameIntervals = window.gameIntervals.filter(i => i !== spawnInterval);
+                }
+                
+                spawnInterval = setInterval(() => {
+                    if (gameActive) spawnIngredient();
+                }, spawnRate);
+                window.gameIntervals.push(spawnInterval);
+                
+                // Schedule next rate update
+                setTimeout(updateSpawnRate, 5000);
+            };
+            
+            updateSpawnRate(); // Start the progressive system
+        }
+
+        // Game 6: Precision Chopping
+        function loadSaladChopGame() {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = `
+                <h3 style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #333;">Chop when the blade hits the vegetable!</h3>
+                <div class="cutting-board" style="position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: 500px; height: 200px;">
+                    <div id="chopping-line" style="position: absolute; top: 50%; left: 0; right: 0; height: 3px; background: #FFD700; box-shadow: 0 0 10px #FFD700;"></div>
+                    <div id="blade" style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: linear-gradient(180deg, #C0C0C0, #808080); box-shadow: 2px 0 5px rgba(0,0,0,0.5); transition: left 0.05s linear;"></div>
+                    <div id="vegetable-zone" style="position: absolute; top: 40%; width: 60px; height: 60px; border: 3px dashed #00FF00; background: rgba(0,255,0,0.1); border-radius: 10px;"></div>
+                </div>
+                <div id="precision-meter" style="position: absolute; bottom: 20%; left: 50%; transform: translateX(-50%); width: 300px; height: 20px; background: #DDD; border-radius: 10px; border: 2px solid #333;">
+                    <div id="precision-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, #FF4444, #FFFF00, #44FF44); border-radius: 8px; transition: width 0.3s;"></div>
+                </div>
+                <div id="chop-instruction" style="position: absolute; bottom: 15%; left: 50%; transform: translateX(-50%); font-size: 1.5rem; font-weight: bold; color: #333;">Press SPACE when blade hits vegetable!</div>
+                <div id="streak" style="position: absolute; top: 15%; right: 10%; font-size: 1.5rem; color: #FFD700; font-weight: bold;">Streak: 0</div>
+            `;
+            
+            let bladePosition = 0; // 0-100 percentage
+            let bladeDirection = 1;
+            let vegetablePosition = 50; // percentage
+            let bladeSpeed = 0.8; // Start slower
+            let streak = 0;
+            let precision = 0;
+            let missedSlices = 0; // Track consecutive misses
+            
+            const blade = document.getElementById('blade');
+            const vegetableZone = document.getElementById('vegetable-zone');
+            const precisionFill = document.getElementById('precision-fill');
+            const streakDisplay = document.getElementById('streak');
+            
+            const newVegetable = () => {
+                // Random vegetable and position
+                const vegetables = ['🥕', '🥒', '🍅', '🧅', '🥔', '🌶️'];
+                const vegetable = vegetables[Math.floor(Math.random() * vegetables.length)];
+                vegetablePosition = 20 + Math.random() * 60; // 20-80%
+                
+                vegetableZone.style.left = vegetablePosition + '%';
+                vegetableZone.innerHTML = `<div style="font-size: 3rem; margin-top: -10px;">${vegetable}</div>`;
+            };
+            
+            // Track blade passes over vegetable without slicing
+            let passedVegetable = false;
+            let lastBladePosition = 0;
+            
+            const moveBlade = () => {
+                if (!gameActive) return;
+                
+                lastBladePosition = bladePosition;
+                bladePosition += bladeSpeed * bladeDirection;
+                
+                if (bladePosition >= 100) {
+                    bladePosition = 100;
+                    bladeDirection = -1;
+                } else if (bladePosition <= 0) {
+                    bladePosition = 0;
+                    bladeDirection = 1;
+                }
+                
+                // Check if blade passed over vegetable without slicing
+                const vegetableLeft = vegetablePosition;
+                const vegetableRight = vegetablePosition + 12; // Vegetable zone width
+                
+                if ((lastBladePosition < vegetableLeft && bladePosition > vegetableRight) ||
+                    (lastBladePosition > vegetableRight && bladePosition < vegetableLeft)) {
+                    if (!passedVegetable) {
+                        passedVegetable = true;
+                        missedSlices++;
+                        // Slow down for missing opportunities
+                        bladeSpeed = Math.max(0.3, bladeSpeed - 0.1);
+                        
+                        // Visual feedback for missed opportunity
+                        vegetableZone.style.boxShadow = '0 0 20px red';
+                        setTimeout(() => {
+                            vegetableZone.style.boxShadow = 'none';
+                        }, 200);
+                    }
+                }
+                
+                blade.style.left = bladePosition + '%';
+                
+                // Update precision meter based on distance to vegetable
+                const distance = Math.abs(bladePosition - vegetablePosition);
+                precision = Math.max(0, 100 - distance * 2);
+                precisionFill.style.width = precision + '%';
+                
+                setTimeout(moveBlade, 50);
+            };
+            
+            const chop = () => {
+                if (!gameActive) return;
+                
+                const distance = Math.abs(bladePosition - vegetablePosition);
+                let points = 0;
+                let success = false;
+                
+                if (distance < 3) {
+                    // Perfect!
+                    points = 50 + streak * 5;
+                    streak++;
+                    success = true;
+                    missedSlices = 0;
+                    // Speed up significantly on perfect hits
+                    bladeSpeed = Math.min(2.5, bladeSpeed + 0.15);
+                    vegetableZone.style.background = 'rgba(0,255,0,0.8)';
+                    vegetableZone.innerHTML = '<div style="font-size: 2rem; margin-top: 5px;">✨ PERFECT! ✨</div>';
+                } else if (distance < 8) {
+                    // Great!
+                    points = 30 + streak * 2;
+                    streak++;
+                    success = true;
+                    missedSlices = 0;
+                    // Speed up moderately on great hits
+                    bladeSpeed = Math.min(2.5, bladeSpeed + 0.1);
+                    vegetableZone.style.background = 'rgba(255,255,0,0.8)';
+                    vegetableZone.innerHTML = '<div style="font-size: 2rem; margin-top: 5px;">⭐ GREAT! ⭐</div>';
+                } else if (distance < 15) {
+                    // Good
+                    points = 15;
+                    streak = Math.max(0, streak - 1);
+                    success = true;
+                    missedSlices = 0;
+                    // Small speed increase for good hits
+                    bladeSpeed = Math.min(2.5, bladeSpeed + 0.05);
+                    vegetableZone.style.background = 'rgba(255,165,0,0.8)';
+                    vegetableZone.innerHTML = '<div style="font-size: 2rem; margin-top: 5px;">👍 GOOD 👍</div>';
+                } else {
+                    // Miss
+                    points = -10;
+                    streak = 0;
+                    missedSlices++;
+                    // Slow down on misses
+                    bladeSpeed = Math.max(0.3, bladeSpeed - 0.1);
+                    vegetableZone.style.background = 'rgba(255,0,0,0.8)';
+                    vegetableZone.innerHTML = '<div style="font-size: 2rem; margin-top: 5px;">❌ MISS! ❌</div>';
+                }
+                
+                passedVegetable = false; // Reset for next vegetable
+                
+                addScore(points);
+                streakDisplay.textContent = `${getRandomText('streakPrompt')} ${streak}`;
+                
+                // Visual feedback
+                blade.style.background = success ? 
+                    'linear-gradient(180deg, #00FF00, #008800)' : 
+                    'linear-gradient(180deg, #FF4444, #CC0000)';
+                
+                setTimeout(() => {
+                    blade.style.background = 'linear-gradient(180deg, #C0C0C0, #808080)';
+                    vegetableZone.style.background = 'rgba(0,255,0,0.1)';
+                    newVegetable();
+                }, 1000);
+            };
+            
+            // Keyboard controls
+            const handleKeyPress = (e) => {
+                if (e.code === 'Space' && gameActive) {
+                    e.preventDefault();
+                    chop();
+                }
+            };
+            
+            document.addEventListener('keydown', handleKeyPress);
+            
+            // Also allow clicking
+            gameArea.onclick = chop;
+            
+            // Cleanup keyboard listener when game ends
+            const originalEndGame = endGame;
+            endGame = () => {
+                document.removeEventListener('keydown', handleKeyPress);
+                originalEndGame();
+            };
+            
+            newVegetable();
+            moveBlade();
+        }
+
+        // Initialize the game
+        document.addEventListener('DOMContentLoaded', () => {
+            showScreen('mainMenu');
+        });
+
+        // Prevent context menu
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+</body>
+</html>

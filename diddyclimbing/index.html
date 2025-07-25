@@ -4,32 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diddy Climber</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(to bottom, #87CEEB, #98FB98);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: Arial, sans-serif;
-        }
-        canvas {
-            border: 2px solid #333;
-            background: linear-gradient(to bottom, #87CEEB, #98FB98);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        }
-        .controls {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: #333;
-            background: rgba(255,255,255,0.8);
-            padding: 10px;
-            border-radius: 5px;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="controls">
@@ -39,48 +14,307 @@
         <p>Space - Jump</p>
         <p>Left/Right arrows - Air movement</p>
         <p>T - Toggle debug visuals</p>
+        <p>S - Toggle settings panel</p>
     </div>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <img id="diddyKong" src="diddykong.png" style="position: absolute; transform-origin: center; pointer-events: none; z-index: 10;">
+    
+    <!-- Settings Panel -->
+    <div id="settingsPanel" class="settings-panel">
+        <div class="settings-header">
+            <h2>Game Settings</h2>
+            <button id="closeSettings" class="close-btn">&times;</button>
+        </div>
+        <div class="settings-content">
+            <!-- Physics Settings -->
+            <div class="settings-section">
+                <h3>Physics</h3>
+                <div class="setting-item">
+                    <label for="gravity">Gravity:</label>
+                    <input type="range" id="gravity" min="0.1" max="2" step="0.1" value="0.5">
+                    <span class="value-display">0.5</span>
+                </div>
+                <div class="setting-item">
+                    <label for="friction">Friction:</label>
+                    <input type="range" id="friction" min="0.8" max="0.99" step="0.01" value="0.98">
+                    <span class="value-display">0.98</span>
+                </div>
+                <div class="setting-item">
+                    <label for="snapRange">Snap Range:</label>
+                    <input type="range" id="snapRange" min="1" max="20" step="1" value="5">
+                    <span class="value-display">5</span>
+                </div>
+                <div class="setting-item">
+                    <label for="fallingTimeLimit">Falling Time Limit:</label>
+                    <input type="range" id="fallingTimeLimit" min="0.5" max="3" step="0.1" value="1.0">
+                    <span class="value-display">1.0</span>
+                </div>
+            </div>
+            
+            <!-- Player Settings -->
+            <div class="settings-section">
+                <h3>Player</h3>
+                <div class="setting-item">
+                    <label for="jumpPower">Jump Power:</label>
+                    <input type="range" id="jumpPower" min="5" max="25" step="1" value="12">
+                    <span class="value-display">12</span>
+                </div>
+                <div class="setting-item">
+                    <label for="swingSpeed">Swing Speed:</label>
+                    <input type="range" id="swingSpeed" min="5" max="30" step="1" value="15">
+                    <span class="value-display">15</span>
+                </div>
+                <div class="setting-item">
+                    <label for="rotationSpeed">Rotation Speed:</label>
+                    <input type="range" id="rotationSpeed" min="0.01" max="0.2" step="0.01" value="0.05">
+                    <span class="value-display">0.05</span>
+                </div>
+                <div class="setting-item">
+                    <label for="handOffset">Hand Offset:</label>
+                    <input type="range" id="handOffset" min="5" max="20" step="1" value="10">
+                    <span class="value-display">10</span>
+                </div>
+            </div>
+            
+            <!-- Visual Settings -->
+            <div class="settings-section">
+                <h3>Visuals</h3>
+                <div class="setting-item">
+                    <label for="knobSpacing">Knob Spacing:</label>
+                    <input type="range" id="knobSpacing" min="5" max="20" step="1" value="10">
+                    <span class="value-display">10</span>
+                </div>
+                <div class="setting-item">
+                    <label for="knobRadius">Knob Radius:</label>
+                    <input type="range" id="knobRadius" min="1" max="8" step="1" value="3">
+                    <span class="value-display">3</span>
+                </div>
+                <div class="setting-item">
+                    <label for="wallColor">Wall Color:</label>
+                    <input type="color" id="wallColor" value="#DEB887">
+                </div>
+                <div class="setting-item">
+                    <label for="knobColor">Knob Color:</label>
+                    <input type="color" id="knobColor" value="#8B4513">
+                </div>
+                <div class="setting-item">
+                    <label for="tempKnobColor">Temp Knob Color:</label>
+                    <input type="color" id="tempKnobColor" value="#DAA520">
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="settings-actions">
+                <button id="resetToDefaults" class="reset-btn">Reset to Defaults</button>
+                <button id="saveSettings" class="save-btn">Save Settings</button>
+            </div>
+        </div>
+    </div>
+    
+    <canvas id="gameCanvas" width="4000" height="4000" style="display: none;"></canvas>
+    <canvas id="viewportCanvas" width="800" height="600"></canvas>
+    <img id="diddyKong" src="diddykong.png" alt="Diddy Kong character" style="position: absolute; transform-origin: center; pointer-events: none; z-index: 10;">
     
     <script>
+        // ===== DEFAULT GAME CONFIGURATION =====
+        const DEFAULT_CONFIG = {
+            // World and Viewport Settings
+            viewport: {
+                width: 800,
+                height: 600
+            },
+            world: {
+                width: 4000,
+                height: 4000
+            },
+            
+            // Physics Settings
+            physics: {
+                gravity: 0.5,
+                friction: 0.98,
+                airResistance: 0.99,
+                landingFriction: 0.8,
+                airMovementSpeed: 0.3,
+                fallingTimeLimit: 1.0, // seconds before can't grab
+                snapRange: 5 // pixels for snap-to grabbing
+            },
+            
+            // Player Settings
+            player: {
+                startX: 2000,
+                startY: 2000,
+                width: 20,
+                height: 30,
+                jumpPower: 12,
+                moveSpeed: 5,
+                handOffset: 10,
+                rotationSpeed: 0.05,
+                swingSpeed: 15,
+                jumpSpeed: 12,
+                tempKnobSnapRange: 3
+            },
+            
+            // Diddy Kong Visual Settings
+            diddy: {
+                width: 70,
+                height: 50
+            },
+            
+            // Wall and Knob Visual Settings
+            visuals: {
+                wall: {
+                    color: '#DEB887',
+                    borderColor: '#333',
+                    borderWidth: 2
+                },
+                knobs: {
+                    spacing: 10,
+                    radius: 3,
+                    color: '#8B4513',
+                    highlight: '#CD853F',
+                    shadow: '#654321',
+                    offsetAlternate: true
+                },
+                temporaryKnobs: {
+                    radius: 4,
+                    color: '#DAA520',
+                    highlight: '#FFD700',
+                    shadow: '#654321'
+                },
+                hands: {
+                    radius: 6,
+                    normalColor: '#FFB84D',
+                    grabbingColor: '#FF0000',
+                    strokeColor: '#333',
+                    strokeWidth: 1
+                },
+                grabPoints: {
+                    leftColor: '#00FF00',
+                    rightColor: '#0080FF',
+                    innerColor: '#FFFFFF',
+                    outerRadius: 8,
+                    innerRadius: 4,
+                    lineWidth: 2,
+                    lineDash: [5, 5]
+                },
+                debug: {
+                    velocityColor: '#FF00FF',
+                    trajectoryColor: '#FFFF00',
+                    velocityScale: 5,
+                    trajectoryScale: 3,
+                    arrowLength: 10
+                },
+                player: {
+                    bodyColor: '#FF6B35',
+                    eyeColor: '#000',
+                    eyeRadius: 2,
+                    eyeOffset: { x: 4, y: 8 },
+                    mouthRadius: 3,
+                    mouthOffset: { x: 0, y: 2 }
+                }
+            },
+            
+            // Game Mechanics
+            mechanics: {
+                frameRate: 60,
+                velocityThreshold: 2, // minimum velocity to count as falling
+                significantVelocity: 1, // minimum velocity to show debug vector
+                wallBoundarySize: 20
+            }
+        };
+        
+        // ===== LIVE GAME CONFIGURATION =====
+        // Load saved settings or use defaults
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('diddyClimberSettings');
+            if (savedSettings) {
+                try {
+                    return JSON.parse(savedSettings);
+                } catch (e) {
+                    console.warn('Could not parse saved settings, using defaults');
+                    return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+                }
+            }
+            return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+        }
+        
+        let CONFIG = loadSettings();
+        
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const viewportCanvas = document.getElementById('viewportCanvas');
+        const viewportCtx = viewportCanvas.getContext('2d');
         const diddyImg = document.getElementById('diddyKong');
         
+        const viewportWidth = CONFIG.viewport.width;
+        const viewportHeight = CONFIG.viewport.height;
+        const worldWidth = CONFIG.world.width;
+        const worldHeight = CONFIG.world.height;
+        
+        let camera = {
+            x: 0,
+            y: 0
+        };
+        
         const keys = {};
-        let gravity = 0.5;
-        let friction = 0.98;
+        let gravity = CONFIG.physics.gravity;
+        let friction = CONFIG.physics.friction;
         let debugVisuals = false;
+        let temporaryKnob = null;
         
         const diddyConfig = {
-            width: 70,
-            height: 50
+            width: CONFIG.diddy.width,
+            height: CONFIG.diddy.height
         };
         
         const player = {
-            x: 400,
-            y: 300,
+            x: CONFIG.player.startX,
+            y: CONFIG.player.startY,
             vx: 0,
             vy: 0,
-            width: 20,
-            height: 30,
+            width: CONFIG.player.width,
+            height: CONFIG.player.height,
             leftHand: { x: 0, y: 0, grabbing: false, grabPoint: null },
             rightHand: { x: 0, y: 0, grabbing: false, grabPoint: null },
             angle: 0,
             angularVelocity: 0,
-            jumpPower: 12,
-            moveSpeed: 5
+            jumpPower: CONFIG.player.jumpPower,
+            moveSpeed: CONFIG.player.moveSpeed,
+            fallingTime: 0,
+            canGrab: true
         };
         
         const walls = [
-            { x: 50, y: 0, width: 20, height: 600 },
-            { x: 730, y: 0, width: 20, height: 600 },
-            { x: 200, y: 150, width: 400, height: 20 },
-            { x: 300, y: 250, width: 200, height: 100 },
-            { x: 150, y: 300, width: 100, height: 20 },
-            { x: 550, y: 300, width: 100, height: 20 },
-            { x: 300, y: 450, width: 200, height: 20 }
+            // Outer boundaries
+            { x: 0, y: 0, width: CONFIG.mechanics.wallBoundarySize, height: worldHeight },
+            { x: worldWidth - CONFIG.mechanics.wallBoundarySize, y: 0, width: CONFIG.mechanics.wallBoundarySize, height: worldHeight },
+            { x: 0, y: 0, width: worldWidth, height: CONFIG.mechanics.wallBoundarySize },
+            { x: 0, y: worldHeight - CONFIG.mechanics.wallBoundarySize, width: worldWidth, height: CONFIG.mechanics.wallBoundarySize },
+
+            // Start platform
+            { x: 1800, y: 3850, width: 400, height: 20 },
+            { x: 1800, y: 3550, width: 200, height: 80 },
+            
+            { x: 1700, y: 3370, width: 200, height: 40 },
+            { x: 2100, y: 3140, width: 200, height: 40 },
+            { x: 1750, y: 2910, width: 200, height: 40 },
+            { x: 2200, y: 2680, width: 200, height: 40 },
+            { x: 1900, y: 2350, width: 200, height: 40 },
+            { x: 2300, y: 2060, width: 200, height: 40 },
+
+            // Narrow ledges
+            { x: 2000, y: 1590, width: 100, height: 20 },
+            { x: 2100, y: 1160, width: 100, height: 20 },
+
+            // Vertical wall for wall-jumping
+            { x: 1950, y: 830, width: 20, height: 300 },
+
+            // Final platform (goal)
+            { x: 1800, y: 630, width: 400, height: 20 },
+
+            // Optional: floating small platforms for extra challenge
+            { x: 2000, y: 930, width: 60, height: 20 },
+            { x: 1900, y: 1230, width: 60, height: 20 },
+            { x: 2100, y: 1530, width: 60, height: 20 }
+
         ];
         
         document.addEventListener('keydown', (e) => {
@@ -94,14 +328,43 @@
             if (e.key.toLowerCase() === 't') {
                 debugVisuals = !debugVisuals;
             }
+            
+            if (e.key.toLowerCase() === 's') {
+                toggleSettingsPanel();
+            }
         });
         
         document.addEventListener('keyup', (e) => {
             keys[e.key.toLowerCase()] = false;
         });
         
+        // Add mouse click event to place temporary knob
+        viewportCanvas.addEventListener('click', (e) => {
+            const rect = viewportCanvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left + camera.x;
+            const clickY = e.clientY - rect.top + camera.y;
+            
+            // Create temporary knob at click position
+            temporaryKnob = {
+                x: clickX,
+                y: clickY,
+                width: 6,
+                height: 6
+            };
+        });
+        
+        function updateCamera() {
+            // Center camera on player
+            camera.x = player.x - viewportWidth / 2;
+            camera.y = player.y - viewportHeight / 2;
+            
+            // Keep camera within world bounds
+            camera.x = Math.max(0, Math.min(worldWidth - viewportWidth, camera.x));
+            camera.y = Math.max(0, Math.min(worldHeight - viewportHeight, camera.y));
+        }
+        
         function updateHandPositions() {
-            const handOffset = 10;
+            const handOffset = CONFIG.player.handOffset;
             
             const bodyRadius = player.width / 2;
             const totalOffset = bodyRadius + handOffset;
@@ -114,19 +377,59 @@
         }
         
         function checkWallCollision(x, y) {
+            let closestWall = null;
+            let closestDistance = Infinity;
+            
+            // Check temporary knob first
+            if (temporaryKnob) {
+                const distX = x - temporaryKnob.x;
+                const distY = y - temporaryKnob.y;
+                const distance = Math.sqrt(distX * distX + distY * distY);
+                
+                if (distance <= CONFIG.physics.snapRange) { // Within snap range
+                    return temporaryKnob;
+                }
+                
+                if (x >= temporaryKnob.x - CONFIG.player.tempKnobSnapRange && x <= temporaryKnob.x + CONFIG.player.tempKnobSnapRange &&
+                    y >= temporaryKnob.y - CONFIG.player.tempKnobSnapRange && y <= temporaryKnob.y + CONFIG.player.tempKnobSnapRange) {
+                    return temporaryKnob;
+                }
+            }
+            
+            // Check regular walls
             for (let wall of walls) {
+                // Direct collision check
                 if (x >= wall.x && x <= wall.x + wall.width &&
                     y >= wall.y && y <= wall.y + wall.height) {
                     return wall;
                 }
+                
+                // Find closest point on wall for snap-to functionality
+                const closestX = Math.max(wall.x, Math.min(wall.x + wall.width, x));
+                const closestY = Math.max(wall.y, Math.min(wall.y + wall.height, y));
+                
+                const distX = x - closestX;
+                const distY = y - closestY;
+                const distance = Math.sqrt(distX * distX + distY * distY);
+                
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestWall = wall;
+                }
             }
+            
+            // If closest wall is within snap range, snap to it
+            if (closestWall && closestDistance <= CONFIG.physics.snapRange) {
+                return closestWall;
+            }
+            
             return null;
         }
         
         function handleGrabbing() {
             updateHandPositions();
             
-            if (keys['a'] && !player.leftHand.grabbing) {
+            if (keys['a'] && !player.leftHand.grabbing && player.canGrab) {
                 const wall = checkWallCollision(player.leftHand.x, player.leftHand.y);
                 if (wall) {
                     player.leftHand.grabbing = true;
@@ -135,7 +438,7 @@
                         y: Math.max(wall.y, Math.min(wall.y + wall.height, player.leftHand.y))
                     };
                     
-                    const handOffset = 10;
+                    const handOffset = CONFIG.player.handOffset;
                     const bodyRadius = player.width / 2;
                     const armLength = bodyRadius + handOffset;
                     
@@ -148,6 +451,9 @@
                     
                     player.x = player.leftHand.grabPoint.x + armLength * Math.cos(player.angle);
                     player.y = player.leftHand.grabPoint.y + armLength * Math.sin(player.angle);
+                    
+                    // Reset falling time when grabbing
+                    player.fallingTime = 0;
                 }
             } else if (!keys['a']) {
                 if (player.leftHand.grabbing) {
@@ -155,29 +461,44 @@
                     const rightHandBeingReleased = !keys['d'];
                     
                     if (bothHandsGrabbing && rightHandBeingReleased) {
-                        const jumpSpeed = player.jumpPower;
+                        const jumpSpeed = CONFIG.player.jumpSpeed;
                         player.vx = Math.cos(player.angle - Math.PI/2) * jumpSpeed * 0.8;
                         player.vy = Math.sin(player.angle - Math.PI/2) * jumpSpeed * 0.8 - jumpSpeed;
+                        
+                        // Remove temporary knob if player was grabbing it
+                        if (player.leftHand.grabPoint === temporaryKnob) {
+                            temporaryKnob = null;
+                        }
                         
                         player.leftHand.grabbing = false;
                         player.leftHand.grabPoint = null;
                         player.rightHand.grabbing = false;
                         player.rightHand.grabPoint = null;
                     } else if (!player.rightHand.grabbing) {
-                        const speed = 15;
+                        const speed = CONFIG.player.swingSpeed;
                         player.vx = Math.cos(player.angle + Math.PI/2) * speed * Math.sign(player.angularVelocity);
                         player.vy = Math.sin(player.angle + Math.PI/2) * speed * Math.sign(player.angularVelocity) - 5;
+                        
+                        // Remove temporary knob if player was grabbing it
+                        if (player.leftHand.grabPoint === temporaryKnob) {
+                            temporaryKnob = null;
+                        }
                         
                         player.leftHand.grabbing = false;
                         player.leftHand.grabPoint = null;
                     } else {
+                        // Remove temporary knob if player was grabbing it
+                        if (player.leftHand.grabPoint === temporaryKnob) {
+                            temporaryKnob = null;
+                        }
+                        
                         player.leftHand.grabbing = false;
                         player.leftHand.grabPoint = null;
                     }
                 }
             }
             
-            if (keys['d'] && !player.rightHand.grabbing) {
+            if (keys['d'] && !player.rightHand.grabbing && player.canGrab) {
                 const wall = checkWallCollision(player.rightHand.x, player.rightHand.y);
                 if (wall) {
                     player.rightHand.grabbing = true;
@@ -186,7 +507,7 @@
                         y: Math.max(wall.y, Math.min(wall.y + wall.height, player.rightHand.y))
                     };
                     
-                    const handOffset = 10;
+                    const handOffset = CONFIG.player.handOffset;
                     const bodyRadius = player.width / 2;
                     const armLength = bodyRadius + handOffset;
                     
@@ -199,6 +520,9 @@
                     
                     player.x = player.rightHand.grabPoint.x - armLength * Math.cos(player.angle);
                     player.y = player.rightHand.grabPoint.y - armLength * Math.sin(player.angle);
+                    
+                    // Reset falling time when grabbing
+                    player.fallingTime = 0;
                 }
             } else if (!keys['d']) {
                 if (player.rightHand.grabbing) {
@@ -206,16 +530,31 @@
                     const leftHandBeingReleased = !keys['a'];
                     
                     if (bothHandsGrabbing && leftHandBeingReleased) {
+                        // Remove temporary knob if player was grabbing it
+                        if (player.rightHand.grabPoint === temporaryKnob) {
+                            temporaryKnob = null;
+                        }
+                        
                         player.rightHand.grabbing = false;
                         player.rightHand.grabPoint = null;
                     } else if (!player.leftHand.grabbing) {
-                        const speed = 15;
+                        const speed = CONFIG.player.swingSpeed;
                         player.vx = Math.cos(player.angle - Math.PI/2) * speed * Math.sign(player.angularVelocity);
                         player.vy = Math.sin(player.angle - Math.PI/2) * speed * Math.sign(player.angularVelocity) - 5;
+                        
+                        // Remove temporary knob if player was grabbing it
+                        if (player.rightHand.grabPoint === temporaryKnob) {
+                            temporaryKnob = null;
+                        }
                         
                         player.rightHand.grabbing = false;
                         player.rightHand.grabPoint = null;
                     } else {
+                        // Remove temporary knob if player was grabbing it
+                        if (player.rightHand.grabPoint === temporaryKnob) {
+                            temporaryKnob = null;
+                        }
+                        
                         player.rightHand.grabbing = false;
                         player.rightHand.grabPoint = null;
                     }
@@ -240,8 +579,8 @@
                 
             } else if (leftGrabbing && !rightGrabbing) {
                 const grabPoint = player.leftHand.grabPoint;
-                const rotationSpeed = 0.05;
-                const handOffset = 10;
+                const rotationSpeed = CONFIG.player.rotationSpeed;
+                const handOffset = CONFIG.player.handOffset;
                 const bodyRadius = player.width / 2;
                 const armLength = bodyRadius + handOffset;
 
@@ -256,8 +595,8 @@
                 
             } else if (rightGrabbing && !leftGrabbing) {
                 const grabPoint = player.rightHand.grabPoint;
-                const rotationSpeed = 0.05;
-                const handOffset = 10;
+                const rotationSpeed = CONFIG.player.rotationSpeed;
+                const handOffset = CONFIG.player.handOffset;
                 const bodyRadius = player.width / 2;
                 const armLength = bodyRadius + handOffset;
 
@@ -271,29 +610,45 @@
                 player.vy = 0;
                 
             } else {
-                player.vy += gravity;
+                player.vy += CONFIG.physics.gravity;
                 
-                if (keys['arrowleft']) player.vx -= 0.3;
-                if (keys['arrowright']) player.vx += 0.3;
+                // Track falling time and disable grabbing after falling time limit
+                if (player.vy > CONFIG.mechanics.velocityThreshold) { // Only count as falling if velocity is significant
+                    player.fallingTime += 1/CONFIG.mechanics.frameRate;
+                    if (player.fallingTime > CONFIG.physics.fallingTimeLimit) {
+                        player.canGrab = false;
+                    }
+                } else {
+                    player.fallingTime = 0;
+                    player.canGrab = true;
+                }
                 
-                player.vx *= friction;
-                player.vy *= 0.99;
+                if (keys['arrowleft']) player.vx -= CONFIG.physics.airMovementSpeed;
+                if (keys['arrowright']) player.vx += CONFIG.physics.airMovementSpeed;
+                
+                player.vx *= CONFIG.physics.friction;
+                player.vy *= CONFIG.physics.airResistance;
                 
                 player.x += player.vx;
                 player.y += player.vy;
                 
                 player.angularVelocity = 0;
                 
-                if (player.y > canvas.height - player.height) {
-                    player.y = canvas.height - player.height;
+                if (player.y > worldHeight - player.height) {
+                    player.y = worldHeight - player.height;
                     player.vy = 0;
-                    player.vx *= 0.8;
+                    player.vx *= CONFIG.physics.landingFriction;
                     player.angle = 0;
+                    
+                    // Reset falling state when landing
+                    player.fallingTime = 0;
+                    player.canGrab = true;
                 }
             }
             
+            // Keep player within world bounds
             if (player.x < 0) player.x = 0;
-            if (player.x > canvas.width) player.x = canvas.width;
+            if (player.x > worldWidth) player.x = worldWidth;
             if (player.y < 0) player.y = 0;
         }
         
@@ -308,16 +663,16 @@
                 player.rightHand.grabPoint = null;
                 
                 if (leftGrabbing && rightGrabbing) {
-                    const jumpSpeed = player.jumpPower;
+                    const jumpSpeed = CONFIG.player.jumpSpeed;
                     player.vx = Math.cos(player.angle - Math.PI/2) * jumpSpeed * 0.8;
                     player.vy = Math.sin(player.angle - Math.PI/2) * jumpSpeed * 0.8 - jumpSpeed;
                 } else {
                     player.vx += player.angularVelocity * Math.cos(player.angle) * 10;
-                    player.vy += player.angularVelocity * Math.sin(player.angle) * 10 - player.jumpPower;
+                    player.vy += player.angularVelocity * Math.sin(player.angle) * 10 - CONFIG.player.jumpPower;
                 }
                 
-            } else if (player.y >= canvas.height - player.height - 5) {
-                player.vy = -player.jumpPower;
+            } else if (player.y >= worldHeight - player.height - 5) {
+                player.vy = -CONFIG.player.jumpPower;
             }
         }
         
@@ -328,10 +683,11 @@
                 diddyImg.style.width = diddyConfig.width + 'px';
                 diddyImg.style.height = diddyConfig.height + 'px';
                 
-                const canvasRect = canvas.getBoundingClientRect();
+                const canvasRect = viewportCanvas.getBoundingClientRect();
                 
-                const imgX = canvasRect.left + player.x - diddyConfig.width / 2;
-                const imgY = canvasRect.top + player.y - diddyConfig.height / 2;
+                // Calculate position relative to viewport
+                const imgX = canvasRect.left + (player.x - camera.x) - diddyConfig.width / 2;
+                const imgY = canvasRect.top + (player.y - camera.y) - diddyConfig.height / 2;
                 
                 const angleDegrees = (player.angle * 180 / Math.PI);
                 
@@ -342,81 +698,165 @@
         }
         
         function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Clear the viewport canvas
+            viewportCtx.clearRect(0, 0, viewportWidth, viewportHeight);
             
             updateHandPositions();
             
-            ctx.fillStyle = '#8B4513';
+            // Draw walls within viewport
+            viewportCtx.fillStyle = CONFIG.visuals.wall.color;
             for (let wall of walls) {
-                ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
-                
-                ctx.strokeStyle = '#654321';
-                ctx.lineWidth = 1;
-                for (let i = 0; i < wall.height; i += 10) {
-                    ctx.beginPath();
-                    ctx.moveTo(wall.x, wall.y + i);
-                    ctx.lineTo(wall.x + wall.width, wall.y + i);
-                    ctx.stroke();
+                // Check if wall is visible in viewport
+                if (wall.x + wall.width >= camera.x && wall.x <= camera.x + viewportWidth &&
+                    wall.y + wall.height >= camera.y && wall.y <= camera.y + viewportHeight) {
+                    
+                    const drawX = wall.x - camera.x;
+                    const drawY = wall.y - camera.y;
+                    
+                    viewportCtx.fillRect(drawX, drawY, wall.width, wall.height);
+                    
+                    // Draw climbing knobs
+                    const knobSpacing = CONFIG.visuals.knobs.spacing;
+                    const knobRadius = CONFIG.visuals.knobs.radius;
+                    const knobColor = CONFIG.visuals.knobs.color;
+                    const knobHighlight = CONFIG.visuals.knobs.highlight;
+                    
+                    for (let y = knobSpacing; y < wall.height; y += knobSpacing) {
+                        for (let x = knobSpacing; x < wall.width; x += knobSpacing) {
+                            // Offset every other row for natural look
+                            const offsetX = CONFIG.visuals.knobs.offsetAlternate ? 
+                                (Math.floor(y / knobSpacing) % 2) * (knobSpacing / 2) : 0;
+                            const knobX = drawX + x + offsetX - 3;
+                            const knobY = drawY + y;
+                            
+                            // Only draw if knob is within wall bounds
+                            if (knobX >= drawX && knobX <= drawX + wall.width) {
+                                // Draw knob shadow/depth
+                                viewportCtx.fillStyle = CONFIG.visuals.knobs.shadow;
+                                viewportCtx.beginPath();
+                                viewportCtx.arc(knobX , knobY , knobRadius, 0, Math.PI * 2);
+                                viewportCtx.fill();
+                                
+                                // Draw main knob
+                                viewportCtx.fillStyle = knobColor;
+                                viewportCtx.beginPath();
+                                viewportCtx.arc(knobX, knobY, knobRadius, 0, Math.PI * 2);
+                                viewportCtx.fill();
+                                
+                                // Draw knob highlight
+                                viewportCtx.fillStyle = knobHighlight;
+                                viewportCtx.beginPath();
+                                viewportCtx.arc(knobX , knobY , knobRadius * 0.6, 0, Math.PI * 2);
+                                viewportCtx.fill();
+                            }
+                        }
+                    }
+                    
+                    // Reset fill style back to wall color
+                    viewportCtx.fillStyle = CONFIG.visuals.wall.color;
                 }
             }
             
-            if (debugVisuals) {
-                ctx.save();
-                ctx.translate(player.x, player.y);
-                ctx.rotate(player.angle);
+            // Draw temporary knob if it exists
+            if (temporaryKnob) {
+                const knobScreenX = temporaryKnob.x - camera.x;
+                const knobScreenY = temporaryKnob.y - camera.y;
                 
-                ctx.fillStyle = '#FF6B35';
-                ctx.beginPath();
-                ctx.arc(0, -player.height/2 + player.width/2, player.width/2, Math.PI, 0, false);
-                ctx.lineTo(player.width/2, player.height/2 - player.width/2);
-                ctx.arc(0, player.height/2 - player.width/2, player.width/2, 0, Math.PI, false);
-                ctx.lineTo(-player.width/2, -player.height/2 + player.width/2);
-                ctx.closePath();
-                ctx.fill();
-                
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.arc(-4, -8, 2, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(4, -8, 2, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(0, -2, 3, 0, Math.PI, false);
-                ctx.stroke();
-                
-                ctx.restore();
+                // Only draw if knob is visible in viewport
+                if (knobScreenX >= -10 && knobScreenX <= viewportWidth + 10 &&
+                    knobScreenY >= -10 && knobScreenY <= viewportHeight + 10) {
+                    
+                    const knobRadius = CONFIG.visuals.temporaryKnobs.radius;
+                    
+                    // Draw knob shadow/depth
+                    viewportCtx.fillStyle = CONFIG.visuals.temporaryKnobs.shadow;
+                    viewportCtx.beginPath();
+                    viewportCtx.arc(knobScreenX + 1, knobScreenY + 1, knobRadius, 0, Math.PI * 2);
+                    viewportCtx.fill();
+                    
+                    // Draw main knob (brighter color to distinguish from wall knobs)
+                    viewportCtx.fillStyle = CONFIG.visuals.temporaryKnobs.color;
+                    viewportCtx.beginPath();
+                    viewportCtx.arc(knobScreenX, knobScreenY, knobRadius, 0, Math.PI * 2);
+                    viewportCtx.fill();
+                    
+                    // Draw knob highlight
+                    viewportCtx.fillStyle = CONFIG.visuals.temporaryKnobs.highlight;
+                    viewportCtx.beginPath();
+                    viewportCtx.arc(knobScreenX - 1, knobScreenY - 1, knobRadius * 0.6, 0, Math.PI * 2);
+                    viewportCtx.fill();
+                }
             }
+            
+            // Draw player relative to camera
+            const playerScreenX = player.x - camera.x;
+            const playerScreenY = player.y - camera.y;
             
             if (debugVisuals) {
-                ctx.fillStyle = player.leftHand.grabbing ? '#FF0000' : '#FFB84D';
-                ctx.beginPath();
-                ctx.arc(player.leftHand.x, player.leftHand.y, 6, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 1;
-                ctx.stroke();
+                viewportCtx.save();
+                viewportCtx.translate(playerScreenX, playerScreenY);
+                viewportCtx.rotate(player.angle);
                 
-                ctx.fillStyle = player.rightHand.grabbing ? '#FF0000' : '#FFB84D';
-                ctx.beginPath();
-                ctx.arc(player.rightHand.x, player.rightHand.y, 6, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 1;
-                ctx.stroke();
+                viewportCtx.fillStyle = CONFIG.visuals.player.bodyColor;
+                viewportCtx.beginPath();
+                viewportCtx.arc(0, -player.height/2 + player.width/2, player.width/2, Math.PI, 0, false);
+                viewportCtx.lineTo(player.width/2, player.height/2 - player.width/2);
+                viewportCtx.arc(0, player.height/2 - player.width/2, player.width/2, 0, Math.PI, false);
+                viewportCtx.lineTo(-player.width/2, -player.height/2 + player.width/2);
+                viewportCtx.closePath();
+                viewportCtx.fill();
+                
+                viewportCtx.fillStyle = CONFIG.visuals.player.eyeColor;
+                viewportCtx.beginPath();
+                viewportCtx.arc(-CONFIG.visuals.player.eyeOffset.x, -CONFIG.visuals.player.eyeOffset.y, CONFIG.visuals.player.eyeRadius, 0, Math.PI * 2);
+                viewportCtx.fill();
+                viewportCtx.beginPath();
+                viewportCtx.arc(CONFIG.visuals.player.eyeOffset.x, -CONFIG.visuals.player.eyeOffset.y, CONFIG.visuals.player.eyeRadius, 0, Math.PI * 2);
+                viewportCtx.fill();
+                viewportCtx.beginPath();
+                viewportCtx.arc(CONFIG.visuals.player.mouthOffset.x, -CONFIG.visuals.player.mouthOffset.y, CONFIG.visuals.player.mouthRadius, 0, Math.PI, false);
+                viewportCtx.stroke();
+                
+                viewportCtx.restore();
             }
             
-            if (debugVisuals && (Math.abs(player.vx) > 1 || Math.abs(player.vy) > 1)) {
-                ctx.strokeStyle = '#FF00FF';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(player.x, player.y);
-                ctx.lineTo(player.x + player.vx * 5, player.y + player.vy * 5);
-                ctx.stroke();
+            // Draw hands relative to camera
+            if (debugVisuals) {
+                const leftHandScreenX = player.leftHand.x - camera.x;
+                const leftHandScreenY = player.leftHand.y - camera.y;
+                const rightHandScreenX = player.rightHand.x - camera.x;
+                const rightHandScreenY = player.rightHand.y - camera.y;
+                
+                viewportCtx.fillStyle = player.leftHand.grabbing ? CONFIG.visuals.hands.grabbingColor : CONFIG.visuals.hands.normalColor;
+                viewportCtx.beginPath();
+                viewportCtx.arc(leftHandScreenX, leftHandScreenY, CONFIG.visuals.hands.radius, 0, Math.PI * 2);
+                viewportCtx.fill();
+                viewportCtx.strokeStyle = CONFIG.visuals.hands.strokeColor;
+                viewportCtx.lineWidth = CONFIG.visuals.hands.strokeWidth;
+                viewportCtx.stroke();
+                
+                viewportCtx.fillStyle = player.rightHand.grabbing ? CONFIG.visuals.hands.grabbingColor : CONFIG.visuals.hands.normalColor;
+                viewportCtx.beginPath();
+                viewportCtx.arc(rightHandScreenX, rightHandScreenY, CONFIG.visuals.hands.radius, 0, Math.PI * 2);
+                viewportCtx.fill();
+                viewportCtx.strokeStyle = CONFIG.visuals.hands.strokeColor;
+                viewportCtx.lineWidth = CONFIG.visuals.hands.strokeWidth;
+                viewportCtx.stroke();
             }
             
+            // Draw velocity vector
+            if (debugVisuals && (Math.abs(player.vx) > CONFIG.mechanics.significantVelocity || Math.abs(player.vy) > CONFIG.mechanics.significantVelocity)) {
+                viewportCtx.strokeStyle = CONFIG.visuals.debug.velocityColor;
+                viewportCtx.lineWidth = 2;
+                viewportCtx.beginPath();
+                viewportCtx.moveTo(playerScreenX, playerScreenY);
+                viewportCtx.lineTo(playerScreenX + player.vx * CONFIG.visuals.debug.velocityScale, playerScreenY + player.vy * CONFIG.visuals.debug.velocityScale);
+                viewportCtx.stroke();
+            }
+            
+            // Draw trajectory prediction
             if (debugVisuals && (player.leftHand.grabbing || player.rightHand.grabbing) && Math.abs(player.angularVelocity) > 0.01) {
-                const speed = 15;
+                const speed = CONFIG.player.swingSpeed;
                 let trajectoryVx, trajectoryVy;
                 
                 if (player.leftHand.grabbing && !player.rightHand.grabbing) {
@@ -430,76 +870,340 @@
                     trajectoryVy = Math.sin(player.angle + Math.PI/2) * speed * Math.sign(player.angularVelocity) - 5;
                 }
                 
-                ctx.strokeStyle = '#FFFF00';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.moveTo(player.x, player.y);
-                ctx.lineTo(player.x + trajectoryVx * 3, player.y + trajectoryVy * 3);
-                ctx.stroke();
+                viewportCtx.strokeStyle = CONFIG.visuals.debug.trajectoryColor;
+                viewportCtx.lineWidth = 3;
+                viewportCtx.beginPath();
+                viewportCtx.moveTo(playerScreenX, playerScreenY);
+                viewportCtx.lineTo(playerScreenX + trajectoryVx * CONFIG.visuals.debug.trajectoryScale, playerScreenY + trajectoryVy * CONFIG.visuals.debug.trajectoryScale);
+                viewportCtx.stroke();
                 
-                const arrowLength = 10;
+                const arrowLength = CONFIG.visuals.debug.arrowLength;
                 const arrowAngle = Math.atan2(trajectoryVy, trajectoryVx);
-                const endX = player.x + trajectoryVx * 3;
-                const endY = player.y + trajectoryVy * 3;
+                const endX = playerScreenX + trajectoryVx * CONFIG.visuals.debug.trajectoryScale;
+                const endY = playerScreenY + trajectoryVy * CONFIG.visuals.debug.trajectoryScale;
                 
-                ctx.beginPath();
-                ctx.moveTo(endX, endY);
-                ctx.lineTo(endX - arrowLength * Math.cos(arrowAngle - Math.PI/6), 
+                viewportCtx.beginPath();
+                viewportCtx.moveTo(endX, endY);
+                viewportCtx.lineTo(endX - arrowLength * Math.cos(arrowAngle - Math.PI/6), 
                           endY - arrowLength * Math.sin(arrowAngle - Math.PI/6));
-                ctx.moveTo(endX, endY);
-                ctx.lineTo(endX - arrowLength * Math.cos(arrowAngle + Math.PI/6), 
+                viewportCtx.moveTo(endX, endY);
+                viewportCtx.lineTo(endX - arrowLength * Math.cos(arrowAngle + Math.PI/6), 
                           endY - arrowLength * Math.sin(arrowAngle + Math.PI/6));
-                ctx.stroke();
+                viewportCtx.stroke();
             }
             
+            // Draw grab points
             if (debugVisuals && player.leftHand.grabbing && player.leftHand.grabPoint) {
-                ctx.fillStyle = '#00FF00';
-                ctx.beginPath();
-                ctx.arc(player.leftHand.grabPoint.x, player.leftHand.grabPoint.y, 8, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#FFFFFF';
-                ctx.beginPath();
-                ctx.arc(player.leftHand.grabPoint.x, player.leftHand.grabPoint.y, 4, 0, Math.PI * 2);
-                ctx.fill();
+                const grabScreenX = player.leftHand.grabPoint.x - camera.x;
+                const grabScreenY = player.leftHand.grabPoint.y - camera.y;
+                const leftHandScreenX = player.leftHand.x - camera.x;
+                const leftHandScreenY = player.leftHand.y - camera.y;
                 
-                ctx.strokeStyle = '#00FF00';
-                ctx.lineWidth = 2;
-                ctx.setLineDash([5, 5]);
-                ctx.beginPath();
-                ctx.moveTo(player.leftHand.x, player.leftHand.y);
-                ctx.lineTo(player.leftHand.grabPoint.x, player.leftHand.grabPoint.y);
-                ctx.stroke();
-                ctx.setLineDash([]);
+                viewportCtx.fillStyle = CONFIG.visuals.grabPoints.leftColor;
+                viewportCtx.beginPath();
+                viewportCtx.arc(grabScreenX, grabScreenY, CONFIG.visuals.grabPoints.outerRadius, 0, Math.PI * 2);
+                viewportCtx.fill();
+                viewportCtx.fillStyle = CONFIG.visuals.grabPoints.innerColor;
+                viewportCtx.beginPath();
+                viewportCtx.arc(grabScreenX, grabScreenY, CONFIG.visuals.grabPoints.innerRadius, 0, Math.PI * 2);
+                viewportCtx.fill();
+                
+                viewportCtx.strokeStyle = CONFIG.visuals.grabPoints.leftColor;
+                viewportCtx.lineWidth = CONFIG.visuals.grabPoints.lineWidth;
+                viewportCtx.setLineDash(CONFIG.visuals.grabPoints.lineDash);
+                viewportCtx.beginPath();
+                viewportCtx.moveTo(leftHandScreenX, leftHandScreenY);
+                viewportCtx.lineTo(grabScreenX, grabScreenY);
+                viewportCtx.stroke();
+                viewportCtx.setLineDash([]);
             }
             
             if (debugVisuals && player.rightHand.grabbing && player.rightHand.grabPoint) {
-                ctx.fillStyle = '#0080FF';
-                ctx.beginPath();
-                ctx.arc(player.rightHand.grabPoint.x, player.rightHand.grabPoint.y, 8, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#FFFFFF';
-                ctx.beginPath();
-                ctx.arc(player.rightHand.grabPoint.x, player.rightHand.grabPoint.y, 4, 0, Math.PI * 2);
-                ctx.fill();
+                const grabScreenX = player.rightHand.grabPoint.x - camera.x;
+                const grabScreenY = player.rightHand.grabPoint.y - camera.y;
+                const rightHandScreenX = player.rightHand.x - camera.x;
+                const rightHandScreenY = player.rightHand.y - camera.y;
                 
-                ctx.strokeStyle = '#0080FF';
-                ctx.lineWidth = 2;
-                ctx.setLineDash([5, 5]);
-                ctx.beginPath();
-                ctx.moveTo(player.rightHand.x, player.rightHand.y);
-                ctx.lineTo(player.rightHand.grabPoint.x, player.rightHand.grabPoint.y);
-                ctx.stroke();
-                ctx.setLineDash([]);
+                viewportCtx.fillStyle = CONFIG.visuals.grabPoints.rightColor;
+                viewportCtx.beginPath();
+                viewportCtx.arc(grabScreenX, grabScreenY, CONFIG.visuals.grabPoints.outerRadius, 0, Math.PI * 2);
+                viewportCtx.fill();
+                viewportCtx.fillStyle = CONFIG.visuals.grabPoints.innerColor;
+                viewportCtx.beginPath();
+                viewportCtx.arc(grabScreenX, grabScreenY, CONFIG.visuals.grabPoints.innerRadius, 0, Math.PI * 2);
+                viewportCtx.fill();
+                
+                viewportCtx.strokeStyle = CONFIG.visuals.grabPoints.rightColor;
+                viewportCtx.lineWidth = CONFIG.visuals.grabPoints.lineWidth;
+                viewportCtx.setLineDash(CONFIG.visuals.grabPoints.lineDash);
+                viewportCtx.beginPath();
+                viewportCtx.moveTo(rightHandScreenX, rightHandScreenY);
+                viewportCtx.lineTo(grabScreenX, grabScreenY);
+                viewportCtx.stroke();
+                viewportCtx.setLineDash([]);
             }
+        }
+        
+        // ===== SETTINGS MANAGEMENT =====
+        function saveSettings() {
+            localStorage.setItem('diddyClimberSettings', JSON.stringify(CONFIG));
+            showNotification('Settings saved!');
+        }
+        
+        function resetToDefaults() {
+            CONFIG = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+            updateGlobalVariables();
+            updateSettingsUI();
+            showNotification('Settings reset to defaults!');
+        }
+        
+        function updateGlobalVariables() {
+            gravity = CONFIG.physics.gravity;
+            friction = CONFIG.physics.friction;
+        }
+        
+        function toggleSettingsPanel() {
+            const panel = document.getElementById('settingsPanel');
+            panel.classList.toggle('show');
+            if (panel.classList.contains('show')) {
+                updateSettingsUI();
+            }
+        }
+        
+        function updateSettingsUI() {
+            // Physics settings
+            document.getElementById('gravity').value = CONFIG.physics.gravity;
+            document.getElementById('friction').value = CONFIG.physics.friction;
+            document.getElementById('snapRange').value = CONFIG.physics.snapRange;
+            document.getElementById('fallingTimeLimit').value = CONFIG.physics.fallingTimeLimit;
+            
+            // Player settings
+            document.getElementById('jumpPower').value = CONFIG.player.jumpPower;
+            document.getElementById('swingSpeed').value = CONFIG.player.swingSpeed;
+            document.getElementById('rotationSpeed').value = CONFIG.player.rotationSpeed;
+            document.getElementById('handOffset').value = CONFIG.player.handOffset;
+            
+            // Visual settings
+            document.getElementById('knobSpacing').value = CONFIG.visuals.knobs.spacing;
+            document.getElementById('knobRadius').value = CONFIG.visuals.knobs.radius;
+            document.getElementById('wallColor').value = CONFIG.visuals.wall.color;
+            document.getElementById('knobColor').value = CONFIG.visuals.knobs.color;
+            document.getElementById('tempKnobColor').value = CONFIG.visuals.temporaryKnobs.color;
+            
+            // Update all value displays
+            updateValueDisplays();
+        }
+        
+        function updateValueDisplays() {
+            const ranges = document.querySelectorAll('input[type="range"]');
+            ranges.forEach(range => {
+                const valueDisplay = range.nextElementSibling;
+                if (valueDisplay && valueDisplay.classList.contains('value-display')) {
+                    valueDisplay.textContent = range.value;
+                }
+            });
+        }
+        
+        function showNotification(message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4caf50;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 5px;
+                z-index: 10000;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                transition: all 0.3s ease;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // Initialize settings event listeners
+        function initializeSettings() {
+            const settingsPanel = document.getElementById('settingsPanel');
+            const settingsHeader = document.querySelector('.settings-header');
+            let isDragging = false;
+            let dragOffsetX = 0;
+            let dragOffsetY = 0;
+            
+            // Drag functionality
+            settingsHeader.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                const rect = settingsPanel.getBoundingClientRect();
+                dragOffsetX = e.clientX - rect.left;
+                dragOffsetY = e.clientY - rect.top;
+                
+                // Prevent text selection while dragging
+                e.preventDefault();
+                
+                // Change cursor for entire document
+                document.body.style.cursor = 'move';
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                e.preventDefault();
+                
+                // Calculate new position
+                const newX = e.clientX - dragOffsetX;
+                const newY = e.clientY - dragOffsetY;
+                
+                // Keep panel within viewport bounds
+                const maxX = window.innerWidth - settingsPanel.offsetWidth;
+                const maxY = window.innerHeight - settingsPanel.offsetHeight;
+                
+                const constrainedX = Math.max(0, Math.min(newX, maxX));
+                const constrainedY = Math.max(0, Math.min(newY, maxY));
+                
+                // Update panel position
+                settingsPanel.style.left = constrainedX + 'px';
+                settingsPanel.style.top = constrainedY + 'px';
+                settingsPanel.style.transform = 'none'; // Remove center transform
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    document.body.style.cursor = 'default';
+                }
+            });
+            
+            // Prevent panel from closing when clicking inside it
+            settingsPanel.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+            
+            // Close panel when clicking outside
+            document.addEventListener('click', (e) => {
+                if (settingsPanel.classList.contains('show') && !settingsPanel.contains(e.target)) {
+                    // Only close if not clicking on the S key or settings toggle
+                    const isSettingsKey = e.target === document.body || e.target === document.documentElement;
+                    if (!isSettingsKey) {
+                        settingsPanel.classList.remove('show');
+                        // Reset position when closing
+                        settingsPanel.style.left = '';
+                        settingsPanel.style.top = '';
+                        settingsPanel.style.transform = 'translate(-50%, -50%)';
+                    }
+                }
+            });
+            
+            // Close button
+            document.getElementById('closeSettings').addEventListener('click', (e) => {
+                e.stopPropagation();
+                settingsPanel.classList.remove('show');
+                // Reset position when closing
+                settingsPanel.style.left = '';
+                settingsPanel.style.top = '';
+                settingsPanel.style.transform = 'translate(-50%, -50%)';
+            });
+            
+            // Reset button
+            document.getElementById('resetToDefaults').addEventListener('click', resetToDefaults);
+            
+            // Save button
+            document.getElementById('saveSettings').addEventListener('click', saveSettings);
+            
+            // Physics settings
+            document.getElementById('gravity').addEventListener('input', (e) => {
+                CONFIG.physics.gravity = parseFloat(e.target.value);
+                gravity = CONFIG.physics.gravity;
+                updateValueDisplays();
+            });
+            
+            document.getElementById('friction').addEventListener('input', (e) => {
+                CONFIG.physics.friction = parseFloat(e.target.value);
+                friction = CONFIG.physics.friction;
+                updateValueDisplays();
+            });
+            
+            document.getElementById('snapRange').addEventListener('input', (e) => {
+                CONFIG.physics.snapRange = parseInt(e.target.value);
+                updateValueDisplays();
+            });
+            
+            document.getElementById('fallingTimeLimit').addEventListener('input', (e) => {
+                CONFIG.physics.fallingTimeLimit = parseFloat(e.target.value);
+                updateValueDisplays();
+            });
+            
+            // Player settings
+            document.getElementById('jumpPower').addEventListener('input', (e) => {
+                CONFIG.player.jumpPower = parseInt(e.target.value);
+                player.jumpPower = CONFIG.player.jumpPower;
+                updateValueDisplays();
+            });
+            
+            document.getElementById('swingSpeed').addEventListener('input', (e) => {
+                CONFIG.player.swingSpeed = parseInt(e.target.value);
+                updateValueDisplays();
+            });
+            
+            document.getElementById('rotationSpeed').addEventListener('input', (e) => {
+                CONFIG.player.rotationSpeed = parseFloat(e.target.value);
+                updateValueDisplays();
+            });
+            
+            document.getElementById('handOffset').addEventListener('input', (e) => {
+                CONFIG.player.handOffset = parseInt(e.target.value);
+                updateValueDisplays();
+            });
+            
+            // Visual settings
+            document.getElementById('knobSpacing').addEventListener('input', (e) => {
+                CONFIG.visuals.knobs.spacing = parseInt(e.target.value);
+                updateValueDisplays();
+            });
+            
+            document.getElementById('knobRadius').addEventListener('input', (e) => {
+                CONFIG.visuals.knobs.radius = parseInt(e.target.value);
+                updateValueDisplays();
+            });
+            
+            document.getElementById('wallColor').addEventListener('input', (e) => {
+                CONFIG.visuals.wall.color = e.target.value;
+            });
+            
+            document.getElementById('knobColor').addEventListener('input', (e) => {
+                CONFIG.visuals.knobs.color = e.target.value;
+            });
+            
+            document.getElementById('tempKnobColor').addEventListener('input', (e) => {
+                CONFIG.visuals.temporaryKnobs.color = e.target.value;
+            });
+            
+            // Initialize value displays
+            updateValueDisplays();
         }
         
         function gameLoop() {
             handleGrabbing();
             updatePhysics();
+            updateCamera();
             updateDiddyKongImage();
             draw();
             requestAnimationFrame(gameLoop);
         }
+        
+        // Initialize settings system
+        initializeSettings();
         
         gameLoop();
     </script>

@@ -1,0 +1,426 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* SVG Icons */
+.svg-icon {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+body {
+    font-family: 'Comic Sans MS', cursive;
+    background: linear-gradient(135deg, #ffeb3b, #ff9800);
+    overflow: hidden;
+    user-select: none;
+}
+
+.game-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.screen {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.screen.active {
+    display: block;
+}
+
+.screen.active.main-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Main Menu Styles */
+.main-menu {
+    text-align: center;
+    background: linear-gradient(45deg, #4CAF50, #8BC34A);
+    color: white;
+}
+
+.title {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    text-shadow: 3px 3px 0px #333;
+    animation: bounce 2s infinite;
+}
+
+.subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 40px;
+    opacity: 0.9;
+}
+
+.diddy-char {
+    width: 200px;
+    height: 200px;
+    margin: 20px auto;
+    background-image: url('diddykong.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    animation: float 3s ease-in-out infinite;
+}
+
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 900px;
+    margin: 20px;
+}
+
+.menu-item {
+    background: linear-gradient(45deg, #FF6B35, #F7931E);
+    border: none;
+    border-radius: 15px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.menu-item:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+}
+
+/* Game Screen Styles */
+.game-screen {
+    background: linear-gradient(180deg, #87CEEB, #98FB98);
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.game-header {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.9);
+    padding: 10px 20px;
+    border-radius: 25px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    z-index: 100;
+}
+
+.score, .timer {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.back-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: #ff4444;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 100;
+}
+
+.game-area {
+    position: absolute;
+    top: 80px;
+    left: 5%;
+    width: 90%;
+    height: calc(100vh - 160px);
+    background: rgba(255,255,255,0.8);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+/* Minigame Specific Styles */
+.banana-slice {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, #ffeb3b, #ffc107);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 3px solid #ff9800;
+}
+
+.banana-slice:hover {
+    transform: scale(1.1);
+}
+
+.ingredient {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    cursor: grab;
+    transition: all 0.3s;
+    border: 2px solid #333;
+}
+
+.ingredient:active {
+    cursor: grabbing;
+    transform: scale(1.1);
+}
+
+.bowl {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 150px;
+    background: linear-gradient(180deg, #8D6E63, #5D4037);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    border: 5px solid #3E2723;
+}
+
+.pancake {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, #DEB887, #CD853F);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 3px solid #8B4513;
+}
+
+.oven {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 200px;
+    background: linear-gradient(180deg, #424242, #212121);
+    border-radius: 10px;
+    border: 5px solid #000;
+}
+
+.oven-door {
+    width: 80%;
+    height: 70%;
+    background: rgba(255,140,0,0.3);
+    margin: 10% auto;
+    border-radius: 5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.stirring-pot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 250px;
+    height: 200px;
+    background: linear-gradient(180deg, #37474F, #263238);
+    border-radius: 50% 50% 20% 20%;
+    border: 8px solid #000;
+}
+
+.soup-surface {
+    width: 90%;
+    height: 40%;
+    background: radial-gradient(circle, #FF7043, #D84315);
+    border-radius: 50%;
+    margin: 20% auto 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.spoon {
+    position: absolute;
+    width: 80px;
+    height: 20px;
+    background: #C0C0C0;
+    border-radius: 50px;
+    cursor: grab;
+    top: 30%;
+    left: 40%;
+}
+
+.cutting-board {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    height: 250px;
+    background: linear-gradient(45deg, #8D6E63, #6D4C41);
+    border-radius: 15px;
+    border: 5px solid #4E342E;
+}
+
+.vegetable {
+    position: absolute;
+    width: 80px;
+    height: 60px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.knife {
+    position: absolute;
+    width: 120px;
+    height: 20px;
+    background: linear-gradient(90deg, #8B4513, #C0C0C0);
+    border-radius: 0 10px 10px 0;
+    cursor: pointer;
+    top: 20%;
+    right: 10%;
+}
+
+.progress-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 20px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 100;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    width: 0%;
+    transition: width 0.3s;
+    border-radius: 10px;
+}
+
+/* Animations */
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-20px); }
+    60% { transform: translateY(-10px); }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.7; }
+}
+
+/* Result Screen */
+.result-screen {
+    background: linear-gradient(45deg, #9C27B0, #673AB7);
+    color: white;
+    text-align: center;
+}
+
+.result-title {
+    font-size: 3rem;
+    margin-bottom: 30px;
+}
+
+.final-score {
+    font-size: 2rem;
+    margin-bottom: 40px;
+}
+
+.play-again-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.5rem;
+    border-radius: 25px;
+    cursor: pointer;
+    margin: 10px;
+}
+
+/* Tutorial Screen */
+.tutorial-screen {
+    background: linear-gradient(45deg, #FF6B35, #F7931E);
+    color: white;
+    text-align: center;
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.tutorial-screen h2 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+#tutorialContent {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    margin: 20px;
+    max-width: 600px;
+    font-size: 1.2rem;
+    line-height: 1.6;
+}
+
+.start-game-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.5rem;
+    border-radius: 25px;
+    cursor: pointer;
+    margin: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    transition: all 0.3s;
+}
+
+.start-game-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 20px rgba(0,0,0,0.4);
+}

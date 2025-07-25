@@ -1,0 +1,186 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(to bottom, #87CEEB, #98FB98);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+}
+
+canvas {
+    border: 2px solid #333;
+    background: linear-gradient(to bottom, #87CEEB, #98FB98);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+#gameCanvas {
+    position: absolute;
+    left: -5000px;
+    top: -5000px;
+}
+
+#viewportCanvas {
+    border: 2px solid #333;
+    background: linear-gradient(to bottom, #708090, #696969, #556B2F);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.controls {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: #333;
+    background: rgba(255,255,255,0.8);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.settings-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    max-height: 80vh;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid #333;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    z-index: 1000;
+    display: none;
+    overflow-y: auto;
+    user-select: none; /* Prevent text selection while dragging */
+}
+
+.settings-panel.show {
+    display: block;
+}
+
+.settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #333;
+    color: white;
+    border-radius: 8px 8px 0 0;
+    cursor: move; /* Show move cursor on header */
+    user-select: none; /* Prevent text selection */
+}
+
+.settings-header h2 {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+}
+
+.close-btn:hover {
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+}
+
+.settings-content {
+    padding: 20px;
+}
+
+.settings-section {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.settings-section:last-of-type {
+    border-bottom: none;
+}
+
+.settings-section h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 1.2em;
+    border-bottom: 2px solid #333;
+    padding-bottom: 5px;
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 10px;
+}
+
+.setting-item label {
+    min-width: 140px;
+    font-weight: bold;
+    color: #555;
+}
+
+.setting-item input[type="range"] {
+    flex: 1;
+    margin: 0 10px;
+}
+
+.setting-item input[type="color"] {
+    width: 50px;
+    height: 30px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.value-display {
+    min-width: 40px;
+    text-align: center;
+    font-weight: bold;
+    color: #333;
+    background: #f0f0f0;
+    padding: 2px 8px;
+    border-radius: 3px;
+}
+
+.settings-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.reset-btn, .save-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.reset-btn {
+    background: #ff6b6b;
+    color: white;
+}
+
+.reset-btn:hover {
+    background: #ff5252;
+}
+
+.save-btn {
+    background: #4caf50;
+    color: white;
+}
+
+.save-btn:hover {
+    background: #45a049;
+}
