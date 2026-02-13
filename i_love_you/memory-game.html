@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Catch the Hearts 💕</title>
+    <style>
+        :root {
+            --primary-pink: #ff85a1;
+            --secondary-pink: #fbb1bd;
+            --dark-pink: #ff4d6d;
+            --white: #fff0f3;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            overflow: hidden;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--white);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            text-align: center;
+            touch-action: manipulation;
+        }
+
+        .container {
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 30px;
+            box-shadow: 0 15px 35px rgba(255, 77, 109, 0.2);
+            max-width: 90%;
+            width: 500px;
+            transition: all 0.5s ease;
+            margin: 20px;
+        }
+
+        h1 {
+            color: var(--dark-pink);
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        h2 {
+            color: var(--dark-pink);
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            margin-bottom: 15px;
+        }
+
+        p {
+            color: #666;
+            font-size: clamp(1rem, 3vw, 1.1rem);
+            margin: 10px 0;
+        }
+
+        .screen {
+            transition: opacity 0.5s ease;
+        }
+
+        .hidden {
+            display: none !important;
+            opacity: 0;
+        }
+
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin: 20px auto;
+            overflow: hidden;
+            border-radius: 20px;
+            background: linear-gradient(180deg, rgba(255, 133, 161, 0.1), rgba(251, 177, 189, 0.1));
+        }
+
+        .clickable-heart {
+            position: absolute;
+            font-size: 2.5rem;
+            cursor: pointer;
+            user-select: none;
+            animation: floatUp linear forwards;
+            transition: transform 0.2s ease;
+            z-index: 5;
+        }
+
+        .clickable-heart:hover {
+            transform: scale(1.2);
+        }
+
+        .clickable-heart:active {
+            transform: scale(0.8);
+        }
+
+        @keyframes floatUp {
+            0% { 
+                transform: translateY(0) rotate(0deg); 
+                opacity: 1; 
+            }
+            100% { 
+                transform: translateY(-420px) rotate(360deg); 
+                opacity: 0; 
+            }
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .heart-counter {
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            color: var(--dark-pink);
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .next-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary-pink), var(--dark-pink));
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 77, 109, 0.3);
+            margin-top: 15px;
+            user-select: none;
+        }
+
+        .next-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 77, 109, 0.4);
+        }
+
+        .next-button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(255, 77, 109, 0.3);
+        }
+
+        .floating-heart {
+            position: absolute;
+            top: 100vh;
+            color: var(--primary-pink);
+            font-size: 1.5rem;
+            user-select: none;
+            pointer-events: none;
+            animation: float linear forwards;
+            z-index: 1;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            .game-area {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="screenHearts" class="screen">
+            <h2>Catch the Hearts! 💕</h2>
+            <p id="heartInstruction">Tap the floating hearts!</p>
+            <div class="heart-counter" id="heartCounter">❤️ 0 / 20</div>
+            <div class="game-area" id="gameArea"></div>
+            <button id="nextButton" class="next-button hidden" onclick="showQuestion()">You caught them all! 💝</button>
+        </div>
+    </div>
+
+    <script>
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.className = 'floating-heart';
+            heart.innerText = ['❤️', '💖', '💝', '💕', '💗'][Math.floor(Math.random() * 5)];
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
+            heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
+            heart.style.opacity = Math.random() * 0.5 + 0.3;
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), 6000);
+        }
+        setInterval(createHeart, 400);
+
+        function switchScreen(hideId, showId) {
+            const hideEl = document.getElementById(hideId);
+            const showEl = document.getElementById(showId);
+            hideEl.classList.add('hidden');
+            setTimeout(() => {
+                showEl.classList.remove('hidden');
+            }, 300);
+        }
+
+        
+        let caughtHearts = 0;
+        const heartsNeeded = 20;
+        let gameActive = true;
+
+        const heartEmojis = ['❤️', '💖', '💕', '💗', '💝', '💓'];
+
+        function createClickableHeart() {
+            if (!gameActive) return;
+
+            const heart = document.createElement('div');
+            heart.className = 'clickable-heart';
+            heart.innerText = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+            heart.style.left = Math.random() * 85 + '%';
+            heart.style.bottom = '0px';
+            
+            // Calculate speed based on progress - starts at 3s, gets faster to 0.5s
+            const baseSpeed = 3;
+            const speedReduction = (caughtHearts / heartsNeeded) * 2.5;
+            const speed = baseSpeed - speedReduction + (Math.random() * 0.5 - 0.25);
+            heart.style.animationDuration = speed + 's';
+            
+            heart.onclick = function(e) {
+                e.stopPropagation();
+                popHeart(heart);
+            };
+            
+            const gameArea = document.getElementById('gameArea');
+            gameArea.appendChild(heart);
+            
+            setTimeout(() => {
+                if (heart.parentNode) {
+                    heart.remove();
+                }
+            }, 6000);
+        }
+
+        function popHeart(heart) {
+            if (!gameActive) return;
+
+            caughtHearts++;
+            const counter = document.getElementById('heartCounter');
+            const instruction = document.getElementById('heartInstruction');
+            const nextButton = document.getElementById('nextButton');
+            
+            counter.textContent = `❤️ ${caughtHearts} / ${heartsNeeded}`;
+            
+            const rect = heart.getBoundingClientRect();
+            const parentRect = heart.parentElement.getBoundingClientRect();
+            
+            heart.style.animation = 'none';
+            heart.style.top = (rect.top - parentRect.top) + 'px';
+            heart.style.bottom = 'auto';
+            
+            setTimeout(() => {
+                heart.style.animation = 'pop 0.3s ease forwards';
+            }, 10);
+            
+            setTimeout(() => heart.remove(), 300);
+            
+            if (caughtHearts === 5) {
+                instruction.textContent = 'Keep going! 🥰';
+            } else if (caughtHearts === 10) {
+                instruction.textContent = 'Halfway there! 💕';
+            } else if (caughtHearts === 15) {
+                instruction.textContent = 'Almost there! 🎉';
+            } else if (caughtHearts === heartsNeeded) {
+                instruction.textContent = 'Amazing! 💖';
+                gameActive = false;
+                nextButton.classList.remove('hidden');
+            }
+        }
+
+        setInterval(createClickableHeart, 1800);
+        
+        setTimeout(createClickableHeart, 200);
+
+        function showQuestion() {
+            window.location.href = 'question.html';
+        }
+    </script>
+</body>
+</html>

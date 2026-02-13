@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Will You Be My Valentine? 💕</title>
+    <style>
+        :root {
+            --primary-pink: #ff85a1;
+            --secondary-pink: #fbb1bd;
+            --dark-pink: #ff4d6d;
+            --white: #fff0f3;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            overflow: hidden;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--white);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            text-align: center;
+            touch-action: manipulation;
+        }
+
+        .container {
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 30px;
+            box-shadow: 0 15px 35px rgba(255, 77, 109, 0.2);
+            max-width: 90%;
+            width: 500px;
+            transition: all 0.5s ease;
+            margin: 20px;
+        }
+
+        h1 {
+            color: var(--dark-pink);
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        p {
+            color: #666;
+            font-size: clamp(1rem, 3vw, 1.1rem);
+            margin: 10px 0;
+        }
+
+        .screen {
+            transition: opacity 0.5s ease;
+        }
+
+        .hidden {
+            display: none !important;
+            opacity: 0;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 45px;
+            margin-top: 30px;
+            position: relative;
+        }
+
+        button {
+            padding: 15px 35px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            outline: none;
+            touch-action: manipulation;
+            min-width: 150px;
+        }
+
+        #yesBtn {
+            background-color: var(--dark-pink);
+            color: white;
+            box-shadow: 0 5px 15px rgba(255, 77, 109, 0.4);
+        }
+
+        #yesBtn:active {
+            transform: scale(1.1);
+            background-color: #ff335c;
+        }
+
+        #noBtn {
+            background-color: var(--secondary-pink);
+            color: white;
+            position: relative;
+        }
+
+        #noBtn.moving {
+            position: fixed;
+            z-index: 1000;
+        }
+
+        .heart {
+            color: var(--dark-pink);
+            font-size: clamp(4rem, 15vw, 5rem);
+            display: inline-block;
+            margin: 20px 0;
+            filter: drop-shadow(0 0 10px rgba(255, 77, 109, 0.3));
+            user-select: none;
+        }
+
+        .floating-heart {
+            position: absolute;
+            top: 100vh;
+            color: var(--primary-pink);
+            font-size: 1.5rem;
+            user-select: none;
+            pointer-events: none;
+            animation: float linear forwards;
+            z-index: 1;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="screenQuestion" class="screen">
+            <h1>Will you be my Valentine?</h1>
+            <div class="buttons">
+                <button id="yesBtn" onclick="showSuccess()">Yes!</button>
+                <button id="noBtn" ontouchstart="moveButton()" onmouseover="moveButton()" onclick="moveButton()">No</button>
+            </div>
+        </div>
+
+        <div id="screenSuccess" class="screen hidden">
+            <h1>Yay! I knew you would say yes! 😇</h1>
+            <p>I can't wait to see you again.</p>
+            <div class="heart">💖</div>
+            <p style="font-size: 0.9rem; margin-top: 20px;">I love you you so much. 💕</p>
+        </div>
+    </div>
+
+    <script>
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.className = 'floating-heart';
+            heart.innerText = ['❤️', '💖', '💝', '💕', '💗'][Math.floor(Math.random() * 5)];
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
+            heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
+            heart.style.opacity = Math.random() * 0.5 + 0.3;
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), 6000);
+        }
+        setInterval(createHeart, 400);
+
+        function switchScreen(hideId, showId) {
+            const hideEl = document.getElementById(hideId);
+            const showEl = document.getElementById(showId);
+            hideEl.classList.add('hidden');
+            setTimeout(() => {
+                showEl.classList.remove('hidden');
+            }, 300);
+        }
+
+        function moveButton(e) {
+            if (e) e.preventDefault();
+            
+            const btn = document.getElementById('noBtn');
+            btn.classList.add('moving');
+            
+            const padding = 50;
+            const maxX = window.innerWidth - btn.clientWidth - padding;
+            const maxY = window.innerHeight - btn.clientHeight - padding;
+            
+            const randomX = Math.random() * (maxX - padding) + padding;
+            const randomY = Math.random() * (maxY - padding) + padding;
+            
+            btn.style.left = randomX + 'px';
+            btn.style.top = randomY + 'px';
+        }
+
+        function showSuccess() {
+            switchScreen('screenQuestion', 'screenSuccess');
+            for(let i=0; i<50; i++) {
+                setTimeout(createHeart, i * 100);
+            }
+        }
+    </script>
+</body>
+</html>

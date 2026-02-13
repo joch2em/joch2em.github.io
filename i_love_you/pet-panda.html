@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pet the Panda 🐼</title>
+    <style>
+        :root {
+            --primary-pink: #ff85a1;
+            --secondary-pink: #fbb1bd;
+            --dark-pink: #ff4d6d;
+            --white: #fff0f3;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            overflow: hidden;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--white);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            text-align: center;
+            touch-action: manipulation;
+        }
+
+        .container {
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 30px;
+            box-shadow: 0 15px 35px rgba(255, 77, 109, 0.2);
+            max-width: 90%;
+            width: 500px;
+            transition: all 0.5s ease;
+            margin: 20px;
+        }
+
+        h1 {
+            color: var(--dark-pink);
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        h2 {
+            color: var(--dark-pink);
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            margin-bottom: 15px;
+        }
+
+        p {
+            color: #666;
+            font-size: clamp(1rem, 3vw, 1.1rem);
+            margin: 10px 0;
+        }
+
+        .screen {
+            transition: opacity 0.5s ease;
+        }
+
+        .hidden {
+            display: none !important;
+            opacity: 0;
+        }
+
+        .panda {
+            font-size: clamp(6rem, 20vw, 8rem);
+            cursor: pointer;
+            display: inline-block;
+            margin: 20px;
+            filter: grayscale(0.3);
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .panda:active {
+            transform: scale(1.1);
+        }
+
+        .panda.happy {
+            filter: grayscale(0);
+            animation: wiggle 0.5s ease;
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+
+        .pet-counter {
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            color: var(--dark-pink);
+            margin: 10px;
+            font-weight: bold;
+        }
+
+        .floating-heart {
+            position: absolute;
+            top: 100vh;
+            color: var(--primary-pink);
+            font-size: 1.5rem;
+            user-select: none;
+            pointer-events: none;
+            animation: float linear forwards;
+            z-index: 1;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+        }
+
+        .next-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary-pink), var(--dark-pink));
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 77, 109, 0.3);
+            margin-top: 15px;
+            user-select: none;
+        }
+
+        .next-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 77, 109, 0.4);
+        }
+
+        .next-button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(255, 77, 109, 0.3);
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="screenPanda" class="screen">
+            <h2>This panda needs love! 🐼</h2>
+            <p>Give it some pets</p>
+            <div class="pet-counter" id="petCounter">❤️ 0 / 10</div>
+            <div class="panda" id="panda">🐼</div>
+            <p id="pandaText">I'm lonely... (swipe me left & right!)</p>
+            <button id="nextButton" class="next-button hidden" onclick="showQuestion()">Yay! I have something for you! 💝</button>
+        </div>
+    </div>
+
+    <script>
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.className = 'floating-heart';
+            heart.innerText = ['❤️', '💖', '💝', '💕', '💗'][Math.floor(Math.random() * 5)];
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
+            heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
+            heart.style.opacity = Math.random() * 0.5 + 0.3;
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), 6000);
+        }
+        setInterval(createHeart, 400);
+
+        function switchScreen(hideId, showId) {
+            const hideEl = document.getElementById(hideId);
+            const showEl = document.getElementById(showId);
+            hideEl.classList.add('hidden');
+            setTimeout(() => {
+                showEl.classList.remove('hidden');
+            }, 300);
+        }
+
+        
+        let petCount = 0;
+        let touchStartX = 0;
+        let lastTouchX = 0;
+        let isTouching = false;
+        let swipeDistance = 0;
+        const swipeThreshold = 800; // pixels needed to count as one pet
+
+        const panda = document.getElementById('panda');
+
+        panda.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isTouching = true;
+            touchStartX = e.touches[0].clientX;
+            lastTouchX = touchStartX;
+            swipeDistance = 0;
+        });
+
+        panda.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (!isTouching) return;
+            
+            const currentX = e.touches[0].clientX;
+            const deltaX = Math.abs(currentX - lastTouchX);
+            
+            swipeDistance += deltaX;
+            lastTouchX = currentX;
+            
+            if (swipeDistance >= swipeThreshold) {
+                petPanda();
+                swipeDistance = 0; 
+            }
+        });
+
+        panda.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            isTouching = false;
+            swipeDistance = 0;
+        });
+
+        panda.addEventListener('mousedown', (e) => {
+            isTouching = true;
+            touchStartX = e.clientX;
+            lastTouchX = touchStartX;
+            swipeDistance = 0;
+        });
+
+        panda.addEventListener('mousemove', (e) => {
+            if (!isTouching) return;
+            
+            const currentX = e.clientX;
+            const deltaX = Math.abs(currentX - lastTouchX);
+            
+            swipeDistance += deltaX;
+            lastTouchX = currentX;
+            
+            if (swipeDistance >= swipeThreshold) {
+                petPanda();
+                swipeDistance = 0;
+            }
+        });
+
+        panda.addEventListener('mouseup', (e) => {
+            isTouching = false;
+            swipeDistance = 0;
+        });
+
+        panda.addEventListener('mouseleave', (e) => {
+            isTouching = false;
+            swipeDistance = 0;
+        });
+
+        function petPanda() {
+            petCount++;
+            const counter = document.getElementById('petCounter');
+            const text = document.getElementById('pandaText');
+            const nextButton = document.getElementById('nextButton');
+            
+            counter.textContent = `❤️ ${petCount} / 10`;
+            panda.classList.add('happy');
+            setTimeout(() => panda.classList.remove('happy'), 500);
+            
+            if (petCount === 1) {
+                text.textContent = "That tickles! Keep going! 😊";
+            } else if (petCount === 5) {
+                text.textContent = "Aww, that feels nice! 🥰";
+            } else if (petCount === 10) {
+                text.textContent = "You did it! 🎉";
+                nextButton.classList.remove('hidden');
+            }
+        }
+
+        function showQuestion() {
+            window.location.href = 'question.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Mini-Games for Love 💖</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .game-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .game-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .game-subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .game-board {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 350px;
+            width: 100%;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 2px;
+            width: 100%;
+            aspect-ratio: 1;
+            background: #34495e;
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .cell {
+            background: #ecf0f1;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .cell:hover {
+            background: #d5dbdb;
+        }
+
+        .tile {
+            width: 100%;
+            height: 100%;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .tile:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .tile:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+
+        .tile.slideable {
+            animation: pulse 2s infinite;
+        }
+
+        .tile.slideable:hover {
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
+            50% { box-shadow: 0 2px 8px rgba(52, 152, 219, 0.6), 0 0 20px rgba(52, 152, 219, 0.3); }
+        }
+
+        .circle {
+            background: #e74c3c;
+            border: 3px solid #c0392b;
+        }
+
+        .block {
+            background: #3498db;
+            border: 2px solid #2980b9;
+        }
+
+        .rect-h {
+            background: #f39c12;
+            border: 2px solid #e67e22;
+        }
+
+        .rect-v {
+            background: #9b59b6;
+            border: 2px solid #8e44ad;
+        }
+
+        .exit {
+            background: #2ecc71;
+            border: 3px solid #27ae60;
+            position: relative;
+        }
+
+        .exit::after {
+            content: "🚪";
+            font-size: 20px;
+        }
+
+        .empty {
+            background: transparent;
+            cursor: default;
+        }
+
+        .empty:hover {
+            background: transparent;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+            width: 120px;
+            height: 120px;
+            display: none; /* Hide controls for sliding puzzle */
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .control-btn:nth-child(2) { grid-column: 2; grid-row: 1; } /* Up */
+        .control-btn:nth-child(3) { grid-column: 1; grid-row: 2; } /* Left */
+        .control-btn:nth-child(4) { grid-column: 3; grid-row: 2; } /* Right */
+        .control-btn:nth-child(5) { grid-column: 2; grid-row: 3; } /* Down */
+
+        .game-info {
+            text-align: center;
+            color: white;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .win-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        .win-title {
+            font-size: 24px;
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+
+        .next-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .next-btn:active {
+            transform: scale(0.95);
+            background: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <div class="game-title">Sliding Puzzle 🧩</div>
+            <div class="game-subtitle">Slide tiles to help the circle reach the exit!</div>
+        </div>
+
+        <div class="game-board">
+            <div class="grid" id="gameGrid"></div>
+        </div>
+
+        <div class="game-info">
+            <div>Level: <span id="levelNumber">1</span></div>
+            <div>Moves: <span id="moveCount">0</span></div>
+            <div style="margin-top: 10px; font-size: 12px;">Drag tiles to slide them!</div>
+        </div>
+
+        <div class="win-message" id="winMessage">
+            <div class="win-title">🎉 Level Complete! 🎉</div>
+            <div>Great job! Ready for the next challenge?</div>
+            <button class="next-btn" onclick="nextLevel()">Next Level ➡️</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let currentLevel = 0;
+        let moves = 0;
+        let board = [];
+
+        // Level definitions - 4x4 grid sliding puzzles
+        const levels = [
+            {
+                // Level 1 - Simple path
+                solution: [
+                    ['empty', 'empty', 'empty', 'exit'],
+                    ['empty', 'block', 'empty', 'empty'],
+                    ['empty', 'rect-h', 'rect-h', 'empty'],
+                    ['circle', 'empty', 'empty', 'empty']
+                ]
+            },
+            {
+                // Level 2 - More complex
+                solution: [
+                    ['empty', 'rect-v', 'empty', 'exit'],
+                    ['empty', 'rect-v', 'block', 'empty'],
+                    ['rect-h', 'rect-h', 'empty', 'empty'],
+                    ['circle', 'empty', 'empty', 'block']
+                ]
+            },
+            {
+                // Level 3 - Challenging
+                solution: [
+                    ['block', 'empty', 'rect-h', 'rect-h'],
+                    ['empty', 'empty', 'empty', 'exit'],
+                    ['rect-v', 'block', 'empty', 'empty'],
+                    ['rect-v', 'circle', 'empty', 'empty']
+                ]
+            }
+        ];
+
+        function initializeGame() {
+            loadLevel(currentLevel);
+        }
+
+        function loadLevel(levelIndex) {
+            if (levelIndex >= levels.length) {
+                document.getElementById('winMessage').innerHTML = `
+                    <div class="win-title">🎊 All Puzzles Solved! 🎊</div>
+                    <div>Amazing! You're a sliding puzzle master!</div>
+                    <button class="next-btn" onclick="location.reload()">Play Again</button>
+                `;
+                document.getElementById('winMessage').style.display = 'block';
+                return;
+            }
+
+            const level = levels[levelIndex];
+            
+            // Initialize the board - shuffle the solution a bit to create a puzzle
+            board = JSON.parse(JSON.stringify(level.solution));
+            shuffleBoard();
+            moves = 0;
+
+            document.getElementById('levelNumber').textContent = levelIndex + 1;
+            document.getElementById('moveCount').textContent = moves;
+            
+            renderGame();
+        }
+
+        function shuffleBoard() {
+            // Do some random valid moves to scramble the board
+            for (let i = 0; i < 20; i++) {
+                const movableTiles = getMovableTiles();
+                if (movableTiles.length > 0) {
+                    const randomTile = movableTiles[Math.floor(Math.random() * movableTiles.length)];
+                    moveTile(randomTile.row, randomTile.col, false); // Don't count these as player moves
+                }
+            }
+            moves = 0; // Reset move counter after shuffling
+        }
+
+        function renderGame() {
+            const grid = document.getElementById('gameGrid');
+            grid.innerHTML = '';
+
+            for (let row = 0; row < 4; row++) {
+                for (let col = 0; col < 4; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+
+                    const tileType = board[row][col];
+                    
+                    if (tileType !== 'empty') {
+                        const tile = document.createElement('div');
+                        tile.className = `tile ${tileType}`;
+                        tile.dataset.row = row;
+                        tile.dataset.col = col;
+                        
+                        // Add slideable class if this tile can move
+                        if (tileType !== 'exit' && canMoveTile(row, col)) {
+                            tile.classList.add('slideable');
+                            setupDragEvents(tile);
+                        }
+                        
+                        if (tileType === 'circle') {
+                            tile.textContent = '●';
+                            tile.style.fontSize = '24px';
+                        } else if (tileType === 'block') {
+                            tile.textContent = '■';
+                            tile.style.fontSize = '20px';
+                        } else if (tileType.includes('rect')) {
+                            tile.textContent = '▬';
+                            tile.style.fontSize = '16px';
+                        } else if (tileType === 'exit') {
+                            tile.style.cursor = 'default';
+                        }
+                        
+                        cell.appendChild(tile);
+                    } else {
+                        cell.classList.add('empty');
+                    }
+
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function getMovableTiles() {
+            const movable = [];
+            
+            for (let row = 0; row < 4; row++) {
+                for (let col = 0; col < 4; col++) {
+                    const tileType = board[row][col];
+                    if (tileType !== 'empty' && tileType !== 'exit' && canMoveTile(row, col)) {
+                        movable.push({ row, col });
+                    }
+                }
+            }
+            
+            return movable;
+        }
+
+        function canMoveTile(row, col) {
+            const tileType = board[row][col];
+            
+            // Exit door cannot be moved
+            if (tileType === 'exit') {
+                return false;
+            }
+            
+            // Check if tile can slide in any direction
+            const directions = [
+                [-1, 0], [1, 0], [0, -1], [0, 1] // up, down, left, right
+            ];
+
+            for (const [dRow, dCol] of directions) {
+                const newRow = row + dRow;
+                const newCol = col + dCol;
+                
+                if (newRow >= 0 && newRow < 4 && newCol >= 0 && newCol < 4) {
+                    if (board[newRow][newCol] === 'empty') {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        }
+
+        function moveTile(row, col, countMove = true) {
+            const tileType = board[row][col];
+            
+            // Can't move empty spaces or the exit door
+            if (tileType === 'empty' || tileType === 'exit') {
+                return;
+            }
+
+            // Find which direction we can slide (check all 4 directions)
+            const directions = [
+                [-1, 0], [1, 0], [0, -1], [0, 1] // up, down, left, right
+            ];
+
+            let moved = false;
+
+            for (const [dRow, dCol] of directions) {
+                let newRow = row + dRow;
+                let newCol = col + dCol;
+                
+                // Check if we can slide in this direction
+                if (newRow >= 0 && newRow < 4 && newCol >= 0 && newCol < 4 && 
+                    board[newRow][newCol] === 'empty') {
+                    
+                    // Slide as far as possible in this direction
+                    let finalRow = newRow;
+                    let finalCol = newCol;
+                    
+                    while (finalRow >= 0 && finalRow < 4 && finalCol >= 0 && finalCol < 4 && 
+                           board[finalRow][finalCol] === 'empty') {
+                        newRow = finalRow;
+                        newCol = finalCol;
+                        finalRow += dRow;
+                        finalCol += dCol;
+                    }
+                    
+                    // Move the tile to its final position
+                    board[newRow][newCol] = board[row][col];
+                    board[row][col] = 'empty';
+                    
+                    if (countMove) {
+                        moves++;
+                        document.getElementById('moveCount').textContent = moves;
+                    }
+                    
+                    moved = true;
+                    break;
+                }
+            }
+
+            if (moved) {
+                renderGame();
+                checkWin();
+            }
+        }
+
+        function checkWin() {
+            // Find circle and exit positions
+            let circlePos = null;
+            let exitPos = null;
+
+            for (let row = 0; row < 4; row++) {
+                for (let col = 0; col < 4; col++) {
+                    if (board[row][col] === 'circle') {
+                        circlePos = { row, col };
+                    }
+                    if (board[row][col] === 'exit') {
+                        exitPos = { row, col };
+                    }
+                }
+            }
+
+            // Check if circle is adjacent to the exit
+            if (circlePos && exitPos) {
+                const distance = Math.abs(circlePos.row - exitPos.row) + Math.abs(circlePos.col - exitPos.col);
+                if (distance === 1) {
+                    setTimeout(() => {
+                        document.getElementById('winMessage').style.display = 'block';
+                    }, 300);
+                }
+            }
+        }
+
+        function nextLevel() {
+            document.getElementById('winMessage').style.display = 'none';
+            currentLevel++;
+            loadLevel(currentLevel);
+        }
+
+        // Drag and drop functionality
+        let dragState = {
+            isDragging: false,
+            dragTile: null,
+            startX: 0,
+            startY: 0,
+            threshold: 30 // minimum distance to trigger a slide
+        };
+
+        function setupDragEvents(tile) {
+            // Mouse events
+            tile.addEventListener('mousedown', startDrag);
+            
+            // Touch events for mobile
+            tile.addEventListener('touchstart', startDrag, { passive: false });
+        }
+
+        function startDrag(e) {
+            e.preventDefault();
+            
+            const tile = e.target;
+            const row = parseInt(tile.dataset.row);
+            const col = parseInt(tile.dataset.col);
+            
+            // Only allow dragging if tile can move
+            if (!canMoveTile(row, col)) return;
+            
+            dragState.isDragging = true;
+            dragState.dragTile = tile;
+            
+            // Get starting position
+            const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            
+            dragState.startX = clientX;
+            dragState.startY = clientY;
+            
+            // Add visual feedback
+            tile.style.transform = 'scale(1.1)';
+            tile.style.zIndex = '1000';
+            tile.style.opacity = '0.9';
+            
+            // Add global event listeners
+            document.addEventListener('mousemove', dragMove);
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchmove', dragMove, { passive: false });
+            document.addEventListener('touchend', endDrag);
+        }
+
+        function dragMove(e) {
+            if (!dragState.isDragging) return;
+            e.preventDefault();
+            
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+            
+            const deltaX = clientX - dragState.startX;
+            const deltaY = clientY - dragState.startY;
+            
+            // Visual feedback during drag
+            dragState.dragTile.style.transform = `scale(1.1) translate(${deltaX * 0.3}px, ${deltaY * 0.3}px)`;
+        }
+
+        function endDrag(e) {
+            if (!dragState.isDragging) return;
+            
+            const clientX = e.type === 'touchend' ? e.changedTouches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchend' ? e.changedTouches[0].clientY : e.clientY;
+            
+            const deltaX = clientX - dragState.startX;
+            const deltaY = clientY - dragState.startY;
+            
+            // Reset visual feedback
+            dragState.dragTile.style.transform = '';
+            dragState.dragTile.style.zIndex = '';
+            dragState.dragTile.style.opacity = '';
+            
+            // Determine drag direction if threshold is met
+            if (Math.abs(deltaX) > dragState.threshold || Math.abs(deltaY) > dragState.threshold) {
+                const row = parseInt(dragState.dragTile.dataset.row);
+                const col = parseInt(dragState.dragTile.dataset.col);
+                
+                let direction = null;
+                
+                // Determine primary direction
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    direction = deltaX > 0 ? 'right' : 'left';
+                } else {
+                    direction = deltaY > 0 ? 'down' : 'up';
+                }
+                
+                // Try to move in that direction
+                moveTileInDirection(row, col, direction);
+            }
+            
+            // Clean up
+            dragState.isDragging = false;
+            dragState.dragTile = null;
+            
+            // Remove global event listeners
+            document.removeEventListener('mousemove', dragMove);
+            document.removeEventListener('mouseup', endDrag);
+            document.removeEventListener('touchmove', dragMove);
+            document.removeEventListener('touchend', endDrag);
+        }
+
+        function moveTileInDirection(row, col, direction) {
+            const tileType = board[row][col];
+            
+            // Can't move empty spaces or the exit door
+            if (tileType === 'empty' || tileType === 'exit') {
+                return;
+            }
+
+            let dRow = 0, dCol = 0;
+            
+            switch(direction) {
+                case 'up': dRow = -1; break;
+                case 'down': dRow = 1; break;
+                case 'left': dCol = -1; break;
+                case 'right': dCol = 1; break;
+                default: return;
+            }
+            
+            let newRow = row + dRow;
+            let newCol = col + dCol;
+            
+            // Check if we can slide in this direction
+            if (newRow >= 0 && newRow < 4 && newCol >= 0 && newCol < 4 && 
+                board[newRow][newCol] === 'empty') {
+                
+                // Slide as far as possible in this direction
+                let finalRow = newRow;
+                let finalCol = newCol;
+                
+                while (finalRow >= 0 && finalRow < 4 && finalCol >= 0 && finalCol < 4 && 
+                       board[finalRow][finalCol] === 'empty') {
+                    newRow = finalRow;
+                    newCol = finalCol;
+                    finalRow += dRow;
+                    finalCol += dCol;
+                }
+                
+                // Move the tile to its final position
+                board[newRow][newCol] = board[row][col];
+                board[row][col] = 'empty';
+                
+                moves++;
+                document.getElementById('moveCount').textContent = moves;
+                
+                renderGame();
+                checkWin();
+            }
+        }
+
+        // Initialize the game
+        initializeGame();
+    </script>
+</body>
+</html>

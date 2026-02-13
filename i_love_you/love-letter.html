@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Love Letter 💌</title>
+    <style>
+        :root {
+            --primary-pink: #ff85a1;
+            --secondary-pink: #fbb1bd;
+            --dark-pink: #ff4d6d;
+            --white: #fff0f3;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            overflow: hidden;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--white);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            text-align: center;
+            touch-action: manipulation;
+        }
+
+        .container {
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 30px;
+            box-shadow: 0 15px 35px rgba(255, 77, 109, 0.2);
+            max-width: 90%;
+            width: 500px;
+            transition: all 0.5s ease;
+            margin: 20px;
+        }
+
+        h1 {
+            color: var(--dark-pink);
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        h2 {
+            color: var(--dark-pink);
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            margin-bottom: 15px;
+        }
+
+        p {
+            color: #666;
+            font-size: clamp(1rem, 3vw, 1.1rem);
+            margin: 10px 0;
+        }
+
+        .screen {
+            transition: opacity 0.5s ease;
+        }
+
+        .hidden {
+            display: none !important;
+            opacity: 0;
+        }
+
+        .envelope {
+            width: 200px;
+            height: 130px;
+            background: #fff;
+            border: 3px solid var(--dark-pink);
+            border-radius: 10px;
+            position: relative;
+            margin: 100px auto auto auto;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .envelope:active {
+            cursor: grabbing;
+        }
+
+        .envelope-flap {
+            width: 0;
+            height: 0;
+            border-left: 103px solid transparent;
+            border-right: 103px solid transparent;
+            border-top: 70px solid var(--secondary-pink);
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: top center;
+            transition: none;
+        }
+
+        .envelope.opening .envelope-flap {
+            transition: transform 0.1s ease-out;
+        }
+
+        .envelope.fully-open .envelope-flap {
+            transform: rotateX(180deg);
+            transition: transform 0.3s ease-out;
+        }
+
+        .letter {
+            background: var(--white);
+            width: 180px;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px auto;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.5s ease;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+        }
+
+        .letter.show {
+            max-height: 500px;
+            opacity: 1;
+            margin-top: 30px;
+        }
+
+        .menu-item {
+            background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
+            padding: 15px 25px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 77, 109, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .menu-item:active {
+            transform: scale(0.95);
+        }
+
+        .floating-heart {
+            position: absolute;
+            top: 100vh;
+            color: var(--primary-pink);
+            font-size: 1.5rem;
+            user-select: none;
+            pointer-events: none;
+            animation: float linear forwards;
+            z-index: 1;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="screenLetter" class="screen">
+            <h2>You've got mail! 💌</h2>
+            <p id="letterInstruction">Slide to open the envelope</p>
+            <div class="envelope" id="envelope">
+                <div class="envelope-flap"></div>
+            </div>
+            <div class="letter" id="letter">
+                <p style="color: var(--dark-pink); font-weight: bold;">My Love,</p>
+                <p>Every moment with you is magical.</p>
+                <p>You make my world brighter just by being in it.</p>
+                <p>You are my everything.</p>
+                <p style="color: var(--dark-pink); margin-top: 20px;">Now for my question...</p>
+                <button class="menu-item" style="margin-top: 20px;" onclick="showQuestion()">Continue ❤️</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.className = 'floating-heart';
+            heart.innerText = ['❤️', '💖', '💝', '💕', '💗'][Math.floor(Math.random() * 5)];
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
+            heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
+            heart.style.opacity = Math.random() * 0.5 + 0.3;
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), 6000);
+        }
+        setInterval(createHeart, 400);
+
+        function switchScreen(hideId, showId) {
+            const hideEl = document.getElementById(hideId);
+            const showEl = document.getElementById(showId);
+            hideEl.classList.add('hidden');
+            setTimeout(() => {
+                showEl.classList.remove('hidden');
+            }, 300);
+        }
+
+        
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let totalDrag = 0;
+        const OPEN_THRESHOLD = 100; // pixels needed to fully open
+
+        const envelope = document.getElementById('envelope');
+        const flap = envelope.querySelector('.envelope-flap');
+        const letter = document.getElementById('letter');
+        const instruction = document.getElementById('letterInstruction');
+
+        
+        envelope.addEventListener('mousedown', startDrag);
+        envelope.addEventListener('mousemove', drag);
+        envelope.addEventListener('mouseup', endDrag);
+        envelope.addEventListener('mouseleave', endDrag);
+
+        
+        envelope.addEventListener('touchstart', startDrag);
+        envelope.addEventListener('touchmove', drag);
+        envelope.addEventListener('touchend', endDrag);
+
+        function startDrag(e) {
+            if (envelope.classList.contains('fully-open')) return;
+            
+            isDragging = true;
+            envelope.classList.add('opening');
+            
+            const point = e.touches ? e.touches[0] : e;
+            startX = point.clientX;
+            startY = point.clientY;
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            const point = e.touches ? e.touches[0] : e;
+            const deltaX = Math.abs(point.clientX - startX);
+            const deltaY = Math.abs(point.clientY - startY);
+            
+            totalDrag = Math.max(deltaX, deltaY * 0.5);
+            
+            const rotation = Math.min((totalDrag / OPEN_THRESHOLD) * 180, 180);
+            flap.style.transform = `rotateX(${rotation}deg)`;
+            
+            const progress = Math.min((totalDrag / OPEN_THRESHOLD) * 100, 100);
+            if (progress > 30 && progress < 100) {
+                instruction.textContent = 'Keep going...';
+            }
+        }
+
+        function endDrag(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            
+            if (totalDrag >= OPEN_THRESHOLD) {
+                envelope.classList.remove('opening');
+                envelope.classList.add('fully-open');
+                flap.style.transform = 'rotateX(180deg)';
+                instruction.textContent = 'Read the letter...';
+                
+                setTimeout(() => {
+                    letter.classList.add('show');
+                }, 500);
+            } else {
+                flap.style.transform = 'rotateX(0deg)';
+                instruction.textContent = 'Slide to open the envelope';
+                totalDrag = 0;
+            }
+        }
+
+        function showQuestion() {
+            window.location.href = 'question.html';
+        }
+    </script>
+</body>
+</html>
